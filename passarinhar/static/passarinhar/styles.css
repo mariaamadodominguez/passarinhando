@@ -1,0 +1,14 @@
+textarea {
+    min-height: 100px;
+}
+.button {
+    border: none;
+    color: #007bff;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: contents;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+  }

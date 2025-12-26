@@ -1,0 +1,33 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2 id="page-title">{{ title }}</h2>
+
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
+<div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
+{% endif %}
+
+
+{% if recent_observations_data %}
+<div class='container'>
+    {% for recent_observation in recent_observations_data.data %}
+    <div class="p-1 my-1 bg-white text-dark border border-secondary">
+        <h3 id="name{{ forloop.counter0 }}"> {{ recent_observation.comName }}</h3>
+        <ul>
+            <li>Código da espécie:<span id="comName{{ forloop.counter0 }}"> {{ recent_observation.speciesCode }}</span>
+            </li>
+            <li>Nome científico:<span id="sciName{{ forloop.counter0 }}"> {{ recent_observation.sciName }}</span></li>
+            <li>Data da observação:<span id="obsDt{{ forloop.counter0 }}"> {{ recent_observation.obsDt }}</span></li>
+            <li>Local:<span id="locName{{ forloop.counter0 }}"> {{recent_observation.locName}}</span></li>
+            <li>Quantidade:<span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
+        </ul>
+        <!--img src="{{recent_observation.images.0.url}}" alt="{{ recent_observation.speciesCode }}">-->
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

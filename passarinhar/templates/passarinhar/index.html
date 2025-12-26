@@ -1,0 +1,118 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2 id="page-title">{{ title }}</h2>
+
+<div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
+
+<script>
+    var update_url = "{% url 'passarinhar:updPostContent' %}";
+    var unfollow_url = "{% url 'passarinhar:addRemoveFollowing' %}";
+    var like_url = "{% url 'passarinhar:addNewLike' %}";
+</script>
+
+{% if page_name == 'index' and user.is_authenticated %}
+<div id="newpost-view" class="p-1 my-1 bg-white text-dark border border-secondary">
+    <h3>Novo Post</h3>
+    <form action="{% url 'passarinhar:addNewPost' %}" method="post" id="newpost-form">
+        {% csrf_token %}
+        <textarea class="form-control" id="newpost-content" name="postcontent" placeholder="New Post"></textarea>
+        <input type="submit" class="btn btn-primary" />
+    </form>
+</div>
+{% endif %}
+
+{% if page_name == 'profile' %}
+<div id="profile-view" style="display: block;">
+    <ul>
+        <li>Seguidores: <span id="prf-followers">{{ followers }}</span></li>
+        <li id="prf-following">Seguindo: {{ following }}</li>
+    </ul>
+    {% if user.is_authenticated and user != profile_obj %}
+    <script src="{% static 'passarinhar/profile.js' %}"></script>
+    {% csrf_token %}
+    <button id="follow-btn" class="button" data-profile="{{ title }}" value="{{follow_label}}">{{follow_label}}</button>
+    {% endif %}
+</div>
+{% endif %}
+
+<div id="posts-view">
+    {% for post in page_obj %}
+    <div class="p-1 my-1 bg-white text-dark border border-secondary">
+        <div class="caption"><a href="{% url 'passarinhar:profile' post.author.username %}">{{ post.author }}</a></div>
+
+        <div id="{{post.id}}">
+            {% if user.is_authenticated and user == post.author %}
+            <div id="edit-div{{post.id}}">
+                <button id="edit-btn{{post.id}}" class="button edit" data-id="{{post.id}}">Editar</button>
+            </div>
+            {% endif %}
+            <div>{{post.post_content|linebreaksbr}}</div>
+        </div>
+
+        <div class="editdiv" id="edit-sec{{post.id}}" style='display:none' data-id="{{post.id}}">
+            <form id="updt-form{{post.id}}" data-id="{{ post.id }}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="content{{post.id}}" class="form-control"
+                        id="content{{post.id}}">{{post.post_content}}</textarea>
+                </div>
+                <input type="submit" id="updt-btn{{post.id}}" class="btn btn-primary" data-id="{{ post.id }}" />
+                <input type="reset" value='Discard' id="close-btn{{post.id}}" class="btn btn-secondary"
+                    data-id="{{ post.id }}" />
+            </form>
+        </div>
+
+        <div id="timestamp">{{ post.timestamp }} <i>(Atualizado em {{ post.updated_at }})</i></div>
+
+        <div id="like">
+            {% if user != post.author %}
+            {% csrf_token %}
+            <span id="like-btn{{post.id}}" class="like-button" data-id="{{post.id}}"><i id="like-icon{{post.id}}"
+                    style="color:grey" class="fa fa-heart"></i></span>
+            {% else %}
+            <i id="like-icon{{post.id}}" style="color:grey" class="fa fa-heart"></i>
+            {% endif %}
+
+            <span id="like_count{{post.id}}" data-id="{{post.id}}">{{ post.likes.count }}</span>
+        </div>
+
+        {% if user.is_authenticated and user != post.author %}
+        <div id="comments">
+            <div class="form-group">
+                {% csrf_token %}
+                {{comment_form}}
+            </div>
+            <button id="comment-btn" type="submit" class="button">Comentar</button>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div>*** No post yet***</div>
+    {% endfor %}
+</div>
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1"><span aria-hidden="true">&laquo; </span>
+                Primeira</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                {{page_obj.previous_page_number }}</a></li>
+        {% endif %}
+        <li class="page-item  active" aria-current="page"><a class="page-link" href="?page={{ page_obj.number }}">
+                {{page_obj.number}}</a></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                {{page_obj.next_page_number}}</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                Ultima<span aria-hidden="true"> &raquo;</span></a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% if user.is_authenticated %}
+{% block script %}
+<script src="{% static 'passarinhar/components.js' %}"></script>
+{% endblock %}
+{% endif %}
+{% endblock %}
