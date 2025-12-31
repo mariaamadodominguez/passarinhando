@@ -129,9 +129,10 @@
 {% endif %}
 
 {% block script %}
-    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
-    <script src="{% static 'passarinhar/birdoftheday.js' %}"></script>
-
+    <script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
+    <script type="module" src="{% static 'passarinhar/utils.js' %}"></script>
+    <script type="module" src="{% static 'passarinhar/birdoftheday.js' %}"></script>
+    
     {% if user.is_authenticated %}
         <script src="{% static 'passarinhar/components.js' %}"></script>
     {% endif %}

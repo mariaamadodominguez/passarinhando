@@ -12,3 +12,65 @@ textarea {
     margin: 4px 2px;
     cursor: pointer;
   }
+  .day {
+    border-bottom: 1px solid #ddd;			
+    margin-bottom: 10px;
+    overflow: auto;
+    color: #fff;
+    background-color: #007bff;
+    display: block; 
+  }
+
+  .period {
+    overflow: auto;
+    background-color:lightgray;        
+	  text-transform: capitalize;  
+    color: #000;  
+    padding: 0px 10px;
+  }
+
+  .caption {
+    overflow: auto;
+    background-color:#6c757d;        
+	  text-transform: capitalize;   
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    color: #fff;
+    text-align: left;
+    caption-side: bottom;
+  }
+
+  /* Target the font awesome icon */
+.fa {
+  /* Set initial color */
+  color: black;
+  /* Add transition effect */
+  transition: color 0.5s ease;
+}
+
+/* Add hover effect */
+.fa:hover {
+  /* Change color on hover */
+  color: #007bff
+}
+.tooltip {
+  font-size:1rem;
+  position: relative;
+  display: inline-block;
+  opacity:1;
+}
+
+.tooltip .tooltiptext {  
+  visibility: hidden;
+  color: #007bff;
+  text-align: center;
+  margin-left: 5px;
+  /* Position the tooltip 
+  position: absolute;*/
+  z-index: 1;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+  
+

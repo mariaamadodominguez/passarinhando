@@ -1,4 +1,4 @@
-
+import { searchWikiData } from './utils.js'
 document.addEventListener('DOMContentLoaded', function () {
     // Function to get CSRF token from cookies
     function getCookie(name) {
@@ -19,15 +19,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrftoken = getCookie('csrftoken'); // Get the CSRF token
 
     function showBirdofTheDay() {
-        lat = document.querySelector('#crnt-lat').value;
-        lon = document.querySelector('#crnt-lon').value;                 
+        const lat = document.querySelector('#crnt-lat').value;
+        const lon = document.querySelector('#crnt-lon').value;                 
         // console.log("showBirdofTheDay lat", lat, "lon", lon);
         const payload = {
             "lat": lat,
             "lon": lon,
             "howmany":1
         };
-        url = '/birdoftheday' 
+        const url = '/birdoftheday' 
         fetch(url, { 
             method: 'POST',
             headers: {
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })        
         .then(response => response.json())
         .then(res => {
-            data = res.data
+            const data = res.data
             // console.log('Success res:', res);
             // console.log('Success data:',data[0].sciName);
                                                       
@@ -48,36 +48,27 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector('#obs-date').innerHTML = data[0].obsDt ;
             document.querySelector('#loc-name').innerHTML = data[0].locName;
             
-            /// 1. Buscar informações da imagem
-            //url = 'https://pt.wikipedia.org/w/api.php?action=query&prop=pageimages&titles=japu&pithumbsize=100'
-            // url = 'https://pt.wikipedia.org/w/api.php?action=query&prop=pageimages|pageprops&format=json&pithumbsize=300&titles=japu&origin=*'
-            
-            url = `https://pt.wikipedia.org/w/api.php?action=query&prop=pageimages|pageprops&format=json&pithumbsize=300&titles=${data[0].comName}&origin=*`
-            console.log(url)
-            fetch(url)
-            .then(response => response.json())
-            .then(res => {
-                data = res.query.pages
-                const pages = res.query.pages; //
-                const pageId = Object.keys(pages)[0];
-                const pageData = pages[pageId];
-                console.log(pageData)
-                const title = pageData.title;
+            /// 1. Buscar informações na wikipédia
+            const pageData = searchWikiData(data[0].comName)
+            const title = pageData.title;
+            if (pageData,thumbnail){
                 const img_url =  pageData.thumbnail.source;
                 console.log(`Title: ${title}, img ${img_url}`);
-                document.querySelector('#title').innerHTML = title;
                 document.querySelector('#bird-img').src = img_url;
-                // document.querySelector('#title').innerHTML = img_url;
-            })
-            .catch(error => console.error('Error:', error));
+            } else {
+                console.log(`Title: ${title}, img ${img_url}`);
+                document.querySelector('#title').innerHTML = title;
+            }
+            // document.querySelector('#title').innerHTML = img_url;
         })          
         .catch(error => {
-            console.log(error);
             console.log('Error:', error)                  
-            document.querySelector('#error-msg').style.display = 'block';
-            document.querySelector('#error-msg').innerHTML= error;                  
+            //document.querySelector('#error-msg').style.display = 'block';
+            // document.querySelector('#error-msg').innerHTML= error;      
+            pass            
             });   
     }
+    
     
     showBirdofTheDay()
 })     

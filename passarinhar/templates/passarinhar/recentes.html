@@ -32,13 +32,17 @@
             <li>Data da observação:<span id="obsDt{{ forloop.counter0 }}"> {{ recent_observation.obsDt }}</span></li>
             <li>Local:<span id="locName{{ forloop.counter0 }}"> {{recent_observation.locName}}</span></li>
             <li>Quantidade:<span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
+            <img class ='bird-img' id='{{recent_observation.comName}}' src="" alt="{{ recent_observation.comName }}">
         </ul>
-        <!--img src="{{recent_observation.images.0.url}}" alt="{{ recent_observation.speciesCode }}">-->
+        
     </div>
     {% endfor %}
 </div>
 {% endif %}
 {% block script %}
     <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+    <script type="module" src="{% static 'passarinhar/utils.js' %}"></script>
+    <script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
+
 {% endblock %}
 {% endblock %}
