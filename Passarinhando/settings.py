@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+# from decouple import config
 
 from dotenv import load_dotenv
 import os   
@@ -18,7 +19,8 @@ load_dotenv()
 EBIRD_API_KEY = os.getenv("EBIRD_API_KEY")  
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+# GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH', '')
+# GEOIP_PATH = config('GEOIP_DATA_PATH', default='/usr/share/GeoIP/') 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+  #  'django.contrib.gis',
     'passarinhar'
 ]
 

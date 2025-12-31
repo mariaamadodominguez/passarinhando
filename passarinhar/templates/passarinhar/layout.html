@@ -10,14 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="{% static 'passarinhar/styles.css' %}" rel="stylesheet">
     <link rel="shortcut icon" href="#">
-
-    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
 </head>
 
 <body>
     <nav class="container navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand">Passarinhar</a>
-
         <div>
             <ul class="navbar-nav mr-auto">
                 {% if user.is_authenticated %}
@@ -27,9 +24,7 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'passarinhar:recents' %}">Avistamentos recentes
-                        <span id="crnt-lat"></span>
-                        <span id="crnt-lon"></span></a>
+                    <a class="nav-link" id="geo-link" href="{% url 'passarinhar:recents'%}">Avistamentos recentes</a>
                 </li>
                 <li class="nav-item">
                     <a id="allpost" class="nav-link" href="{% url 'passarinhar:index' %}">Todas as Postagens</a>
@@ -53,7 +48,7 @@
         </div>
     </nav>
 
-    <div class="container body">
+    <div class="container body">         
         {% block body %}
         {% endblock %}
     </div>

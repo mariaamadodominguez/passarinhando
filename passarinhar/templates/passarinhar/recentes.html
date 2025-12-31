@@ -11,6 +11,15 @@
 {% endif %}
 
 
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        {{form.as_p}}
+    </div class="form-group">
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Procurar</button>
+    </div>     
+</form>
 {% if recent_observations_data %}
 <div class='container'>
     {% for recent_observation in recent_observations_data.data %}
@@ -29,5 +38,7 @@
     {% endfor %}
 </div>
 {% endif %}
-
+{% block script %}
+    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+{% endblock %}
 {% endblock %}

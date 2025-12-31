@@ -1,53 +1,65 @@
 # Create your views here.
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from .models import User, Post, Follower
 from django.core.paginator import Paginator
 from django.conf import settings
-
+#from django.contrib.gis.geoip2 import GeoIP2
+from .forms import RecentsForm
 import requests
 
-def fetch_recent_observations_in_a_region(lat, lon):
+def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
     api_key = settings.EBIRD_API_KEY
     locale = "pt_br"
-    maxResults = 10
-    # url = "https://api.ebird.org/v2/data/obs/BR/recent/?sppLocale=" + locale + "&maxResults=" + str(maxResults)
-    url = "https://api.ebird.org/v2/data/obs/geo/recent?lat=" + lat + "&lng=" + lon + "&sppLocale=" + locale + "&maxResults=" + str(maxResults)
+    maxResults = howmany
+    if lat == '':
+        print('fetch_recent_observations_in_a_region')
+        url = "https://api.ebird.org/v2/data/obs/BR/recent/?sppLocale=" + locale + "&maxResults=" + str(maxResults)
+    else:
+        print('fetch_recent_observations_in_a_LoC')
+        url = "https://api.ebird.org/v2/data/obs/geo/recent?lat=" + lat + "&lng=" + lon + "&sppLocale=" + locale + "&maxResults=" + str(maxResults)        
+        
     print(url)
     payload={}
     headers = {
       'X-eBirdApiToken': api_key
-    }
-    
+    }    
     response = requests.request("GET", url, headers=headers, data=payload)    
     # print(api_key, response.text)
     
     data = response.json()
     return {
-        'data': data,
+        'data': data 
     }
 
 
 def index(request):
+    if request.user.is_authenticated:   
+        allposts = Post.objects.all()
     
-    allposts = Post.objects.all()
+        # Return post in reverse chronologial order
+        allposts = allposts.order_by("-timestamp").all()
     
-    # Return post in reverse chronologial order
-    allposts = allposts.order_by("-timestamp").all()
+        p = Paginator(allposts, 10)
+        page_number = request.GET.get('page')
+        page_obj = p.get_page(page_number)
     
-    p = Paginator(allposts, 10)
-    page_number = request.GET.get('page')
-    page_obj = p.get_page(page_number)
-    
-    return render(request, "passarinhar/index.html", {
-        'title':"Todos os posts",
-        "page_name": 'index',
-        #'posts':allposts,
-        'page_obj':page_obj,
+        return render(request, "passarinhar/index.html", {
+            'title':"Foro",
+            "page_name": 'index',
+            #'posts':allposts,
+            'page_obj':page_obj,
         })
+    # Everyone else 
+    else:
+        return render(request, 'passarinhar/index.html', {
+        'title':"Passarinho do dia",
+        "page_name": 'index'
+        })      
                     
 def following(request):    
     
@@ -236,12 +248,62 @@ def addNewLike(request):
         "likes": currentPost.likes_count,
         "userlike": like})        
 
-def recent_observations_view(request, lat, lon):
+def bird_of_the_day_view(request):
     try:         
-        recent_observations_data = fetch_recent_observations_in_a_region(lat, lon)                                
-        if len(recent_observations_data['data']) > 0 :
-            return render(request, 'passarinhar/recentes.html', {'title':'Avistamentos recentes na região', 'recent_observations_data': recent_observations_data})
+        #g = GeoIP2() # GeoIP2 automatically uses the GEOIP_PATH from settings.py
+        # ip_address = request.META.get('REMOTE_ADDR', '127.0.0.1')
+        # Use a public IP for testing if on localhost
+        # if ip_address == '127.0.0.1':
+        #    ip_address = '8.8.8.8' 
+        # city_info = g.city(ip_address)
+            # city_info['latitude'] etc.
+        # print(city_info['latitude'])  
+        if request.headers.get('content-type') == 'application/json':
+            data = json.loads(request.body)    
+            print(f"bird_of_the_day_view {data}")        
+            latitude = data.get('lat','')
+            longitude = data.get('lon','')     
+            howmany = data.get('howmany','')  
+            print(f"bird_of_the_day_view {latitude}, {longitude}, {howmany}")                           
+            recent_observations_data = fetch_recent_observations_in_a_region(
+                latitude,
+                longitude,
+                howmany
+            ) 
+            if len(recent_observations_data['data']) > 0 :            
+                return JsonResponse({
+                    'data': recent_observations_data['data']})        
         else:
-            return render(request, 'passarinhar/recentes.html', {'title':'Avistamentos recentes na região', 'error': 'Nenhuma observação recente encontrada!'} )            
+            return JsonResponse({'error': 'Nenhum passaro encontrado!'})
+                       
     except Exception as e:
-        return render(request, 'passarinhar/recentes.html', {'title':'Avistamentos recentes na região', 'error': str(e)} )
+       return JsonResponse({'error': str(e)})
+            
+def recent_observations_view(request):
+    print(f"recent_observations_view {request.method}")
+    recent_observations_data = None
+    error = None
+    if request.method == 'POST':
+        form = RecentsForm(request.POST)
+        if form.is_valid():
+            latitude = request.POST["lat"]
+            longitude = request.POST["lon"]
+            howmany = request.POST['howmany']        
+            recent_observations_data = fetch_recent_observations_in_a_region(
+                latitude,longitude,howmany)                        
+            print(f"recent_observations_view {latitude},{longitude},{howmany}")
+            
+            if len(recent_observations_data['data']) > 0 :
+                recent_observations_data = recent_observations_data
+            else:
+                error = 'Nenhuma observação recente encontrada!'           
+        else:  
+            pass
+
+    form = RecentsForm()      
+    return render(request, "passarinhar/recentes.html", {
+            "title":'Avistamentos recentes na região',
+            "form": form,
+            "error":error,
+            "recent_observations_data": recent_observations_data
+                  })

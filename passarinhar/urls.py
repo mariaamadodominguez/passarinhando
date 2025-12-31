@@ -9,11 +9,12 @@ urlpatterns = [
     path("register", views.register, name="register"),
     path("following", views.following, name="following"),    
     path("<str:username>/profile", views.profile, name="profile"),
-    path("<str:lat>/<str:lon>/recents", views.recent_observations_view, name="recents"),
+    path("recents", views.recent_observations_view, name="recents"),
     # API Routes
     path("addNewPost", views.addNewPost, name="addNewPost"), 
     path("addNewLike", views.addNewLike, name="addNewLike"),
     path("addRemoveFollowing", views.addRemoveFollowing, name='addRemoveFollowing'),    
-    path("updPostContent", views.updPostContent, name='updPostContent'),    
-    
+    path("updPostContent", views.updPostContent, name='updPostContent'),   
+    path("birdoftheday", views.bird_of_the_day_view, name="birdoftheday"),
+
 ]

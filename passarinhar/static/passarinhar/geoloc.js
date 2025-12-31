@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
+    
     function getLocation() {
         console.log('Geolocation is supported by this browser?');
         console.log("sessionStorage.geolocation", sessionStorage.geolocation);
@@ -11,8 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(success);
             } else {
-                const current_pos = document.getElementById("crnt-geo");
-                console.log(current_pos);
+                const current_pos = document.getElementById("geoloc");
                 current_pos.innerHTML = "Geolocation is not supported by this browser.";
             }
         }
@@ -26,10 +26,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showPosition(lat, lon) {
-        console.log("showPosition lat", lat);
-        console.log("showPosition lon", lon);
-        document.querySelector('#crnt-lat').innerHTML = lat;
-        document.querySelector('#crnt-lon').innerHTML = lon;
+                                                      
+        document.querySelector('#crnt-lat').value = lat;
+        document.querySelector('#crnt-lon').value = lon;     
+          
     }
+    
     getLocation();
+    
 })     

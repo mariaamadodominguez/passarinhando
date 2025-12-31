@@ -11,7 +11,23 @@
     var unfollow_url = "{% url 'passarinhar:addRemoveFollowing' %}";
     var like_url = "{% url 'passarinhar:addNewLike' %}";
 </script>
-
+<div id="current" class="period" style="padding-left:10px">
+    <div id="geoloc">  
+        <input id="crnt-lat" name="lat"></span>
+        <input id="crnt-lon" name="lon"></span>
+    </div>
+    <p class="fw-medium mb-0 ">Hoje</p>
+    {% csrf_token %}
+    <span  id="bird-of-the-day">
+        <div  id="title"></div>
+        <h3 id="common-name"></h3>
+        <p id="spiceCode"></p>
+        <p id="sci-name"></p>
+        <p id="obs-date"></p>
+        <p id="loc-name"></p>
+        <img id="bird-img" src="#" alt="com_name wiki image" >
+    </span>                           
+</div>   
 {% if page_name == 'index' and user.is_authenticated %}
 <div id="newpost-view" class="p-1 my-1 bg-white text-dark border border-secondary">
     <h3>Novo Post</h3>
@@ -36,7 +52,7 @@
     {% endif %}
 </div>
 {% endif %}
-
+{% if page_name == 'index' and user.is_authenticated %}
 <div id="posts-view">
     {% for post in page_obj %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
@@ -110,9 +126,14 @@
         {% endif %}
     </ul>
 </nav>
-{% if user.is_authenticated %}
-{% block script %}
-<script src="{% static 'passarinhar/components.js' %}"></script>
-{% endblock %}
 {% endif %}
+
+{% block script %}
+    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+    <script src="{% static 'passarinhar/birdoftheday.js' %}"></script>
+
+    {% if user.is_authenticated %}
+        <script src="{% static 'passarinhar/components.js' %}"></script>
+    {% endif %}
+{% endblock %}
 {% endblock %}
