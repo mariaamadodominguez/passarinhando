@@ -19,7 +19,6 @@
     <p class="fw-medium mb-0 ">Hoje</p>
     {% csrf_token %}
     <span  id="bird-of-the-day">
-        <div  id="title"></div>
         <h3 id="common-name"></h3>
         <p id="spiceCode"></p>
         <p id="sci-name"></p>
@@ -129,9 +128,8 @@
 {% endif %}
 
 {% block script %}
-    <script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
-    <script type="module" src="{% static 'passarinhar/utils.js' %}"></script>
-    <script type="module" src="{% static 'passarinhar/birdoftheday.js' %}"></script>
+    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+    <script src="{% static 'passarinhar/birdoftheday.js' %}"></script>
     
     {% if user.is_authenticated %}
         <script src="{% static 'passarinhar/components.js' %}"></script>
