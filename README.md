@@ -5,7 +5,10 @@ Usa eBird's API para recuperar informações de passarinhos e locais de avistame
     o88vlfn3ppah  
   * Doc  
     https://documenter.getpostman.com/view/664302/S1ENwy59  
-    https://www.reddit.com/r/Ornithology/comments/14hodrv/web_developer_in_search_of_apis_providing/  
+    https://www.reddit.com/r/Ornithology/comments/14hodrv/web_developer_in_search_of_apis_providing/
+
+    recents https://api.ebird.org/v2/data/obs/{{regionCode}}/recent
+    hotspots https://api.ebird.org/v2/ref/hotspot/BR-RJ-049
 
 # Wikipedia 
 Usa Wikimedia's API pora recuperar as images  
