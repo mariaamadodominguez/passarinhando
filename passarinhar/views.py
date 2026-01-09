@@ -9,19 +9,37 @@ from .models import User, Post, Follower
 from django.core.paginator import Paginator
 from django.conf import settings
 #from django.contrib.gis.geoip2 import GeoIP2
-from .forms import RecentsForm
+from .forms import RecentsForm, LocalsForm
 import requests
+import folium
+
+def fetch_hotspots_nearby(lat, lon, dist = 25):
+    api_key = settings.EBIRD_API_KEY
+    
+    url = f"https://api.ebird.org/v2/ref/hotspot/geo?lat={lat}&lng={lon}&fmt=json&dist={dist}"
+    print(url)
+    payload={}
+    headers = {
+      'X-eBirdApiToken': api_key
+    }    
+    response = requests.request("GET", url, headers=headers, data=payload)    
+    # print(api_key, response.text)    
+    data = response.json()
+    return {
+        'data': data 
+    }
 
 def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
     api_key = settings.EBIRD_API_KEY
-    locale = "pt_br"
+    locale = "pt-br"
+    region = "BR-RJ-049"
     maxResults = howmany
     if lat == '':
         print('fetch_recent_observations_in_a_region')
-        url = "https://api.ebird.org/v2/data/obs/BR/recent/?sppLocale=" + locale + "&maxResults=" + str(maxResults)
+        url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}"
     else:
         print('fetch_recent_observations_in_a_LoC')
-        url = "https://api.ebird.org/v2/data/obs/geo/recent?lat=" + lat + "&lng=" + lon + "&sppLocale=" + locale + "&maxResults=" + str(maxResults)        
+        url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
         
     print(url)
     payload={}
@@ -36,29 +54,139 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
         'data': data 
     }
 
-
-def index(request):
-    if request.user.is_authenticated:   
-        allposts = Post.objects.all()
-    
-        # Return post in reverse chronologial order
-        allposts = allposts.order_by("-timestamp").all()
-    
-        p = Paginator(allposts, 10)
-        page_number = request.GET.get('page')
-        page_obj = p.get_page(page_number)
-    
-        return render(request, "passarinhar/index.html", {
-            'title':"Foro",
-            "page_name": 'index',
-            #'posts':allposts,
-            'page_obj':page_obj,
-        })
-    # Everyone else 
+def hotspots_nearby_view(request):
+    print(f"hotspots_nearby_view {request.method}")
+    hotspots_nearby_data = None
+    error = None
+    if request.method == 'POST':
+        form = LocalsForm(request.POST)
+        if form.is_valid():
+            latitude = request.POST["lat"]
+            longitude = request.POST["lon"]
+            dist = request.POST['dist']        
+            hotspots_nearby_data = fetch_hotspots_nearby(
+                latitude,longitude,dist)                        
+            print(f"hotspots_nearby {latitude},{longitude},{dist}")
+            
+            if len(hotspots_nearby_data['data']) == 0 :
+                error = 'Nenhum local encontrado!'           
+        else:  
+            pass
     else:
-        return render(request, 'passarinhar/index.html', {
+        form = LocalsForm(initial={"dist":5})      
+    return render(request, "passarinhar/locais.html", {
+            "title":'Locais de avistamento na região',
+            "form": form,
+            "error":error,
+            "hotspots_nearby_data": hotspots_nearby_data
+                  })
+
+def show_on_map(request):
+    # For a post request, add/remove following
+    data = json.loads(request.body)        
+    if request.method == "POST":
+        home_lat = data.get('lat', '')
+        home_lon = data.get('lon', '')
+        near_by = data.get('near_by', '')
+        home_map = folium.Map(location=[home_lat, home_lon], zoom_start=8)
+    
+    # instantiate a feature group for the nearby stations in the dataframe
+    nearby_places = folium.map.FeatureGroup()
+
+    # loop through the 20 stations nearby and add each to the feature group
+    for lat, lng, in zip(near_by.lat, near_by.lng):
+        nearby_places.add_child(
+            folium.features.CircleMarker(
+                [lat, lng],
+                radius=5, # define how big you want the circle markers to be
+                color='yellow',
+                fill=True,
+                fill_color='blue',
+                fill_opacity=0.6
+            )
+        )
+    # add pop-up text to each marker on the map
+    latitudes = list(near_by.lat)
+    longitudes = list(near_by.lng)
+    labels = list(near_by.locName)
+
+    for lat, lng, label in zip(latitudes, longitudes, labels):
+        folium.Marker([lat, lng], popup=label).add_to(home_map)
+    # add places to map
+    home_map.add_child(nearby_places)
+    context = {"nearby_map":home_map}
+    return render(request, "passarinhar/locais.html",context)
+
+def bird_of_the_day_view(request):
+    try:         
+        if request.headers.get('content-type') == 'application/json':        
+            latitude = ''
+            longitude = 'lon'     
+            howmany = 1  
+            recent_observations_data = fetch_recent_observations_in_a_region(
+                latitude,
+                longitude,
+                howmany
+            ) 
+            if len(recent_observations_data['data']) > 0 :            
+                return JsonResponse({
+                    'data': recent_observations_data['data']})        
+        else:
+            return JsonResponse({'error': 'Nenhum passaro encontrado!'})
+                       
+    except Exception as e:
+       return JsonResponse({'error': str(e)})
+            
+def recent_observations_view(request):
+    print(f"recent_observations_view {request.method}")
+    recent_observations_data = None
+    error = None
+    if request.method == 'POST':
+        form = RecentsForm(request.POST)
+        if form.is_valid():
+            latitude = request.POST["lat"]
+            longitude = request.POST["lon"]
+            howmany = request.POST['howmany']        
+            recent_observations_data = fetch_recent_observations_in_a_region(
+                latitude,longitude,howmany)                        
+            print(f"recent_observations_view {latitude},{longitude},{howmany}")
+            
+            if len(recent_observations_data['data']) > 0 :
+                recent_observations_data = recent_observations_data
+            else:
+                error = 'Nenhuma observação recente encontrada!'           
+        else:  
+            pass
+
+    form = RecentsForm(initial={"howmany":5})      
+    return render(request, "passarinhar/recentes.html", {
+            "title":'Avistamentos recentes na região',
+            "form": form,
+            "error":error,
+            "recent_observations_data": recent_observations_data
+                  })
+def foro(request):
+    allposts = Post.objects.all()
+    
+    # Return post in reverse chronologial order
+    allposts = allposts.order_by("-timestamp").all()
+    
+    p = Paginator(allposts, 10)
+    page_number = request.GET.get('page')
+    page_obj = p.get_page(page_number)
+    
+    return render(request, "passarinhar/foro.html", {
+        'title':"Foro",
+        "page_name": 'foro',
+        #'posts':allposts,
+        'page_obj':page_obj,
+    })
+    
+def index(request):
+    
+    return render(request, 'passarinhar/index.html', {
         'title':"Passarinho do dia",
-        "page_name": 'index'
+        "page_name": 'passarinho'
         })      
                     
 def following(request):    
@@ -74,7 +202,7 @@ def following(request):
     page_number = request.GET.get('page')
     page_obj = p.get_page(page_number)
 
-    return render(request, "passarinhar/index.html", {
+    return render(request, "passarinhar/foro.html", {
         'title':"Seguidos",
         "page_name": 'following',
         #'posts':posts,        
@@ -170,7 +298,7 @@ def profile(request, username):
         "page_obj": page_obj,
         "follow_label":follow_label,
     }
-    return render(request, "passarinhar/index.html", data)
+    return render(request, "passarinhar/foro.html", data)
 
 def addNewPost(request):
     if request.method == 'POST':
@@ -179,7 +307,7 @@ def addNewPost(request):
             post_content =  request.POST["postcontent"]
         )
         post.save()    
-    return HttpResponseRedirect(reverse("passarinhar:index"))
+    return HttpResponseRedirect(reverse("passarinhar:foro"))
     
 def addRemoveFollowing(request):
     # For a post request, add/remove following
@@ -248,62 +376,3 @@ def addNewLike(request):
         "likes": currentPost.likes_count,
         "userlike": like})        
 
-def bird_of_the_day_view(request):
-    try:         
-        #g = GeoIP2() # GeoIP2 automatically uses the GEOIP_PATH from settings.py
-        # ip_address = request.META.get('REMOTE_ADDR', '127.0.0.1')
-        # Use a public IP for testing if on localhost
-        # if ip_address == '127.0.0.1':
-        #    ip_address = '8.8.8.8' 
-        # city_info = g.city(ip_address)
-            # city_info['latitude'] etc.
-        # print(city_info['latitude'])  
-        if request.headers.get('content-type') == 'application/json':
-            data = json.loads(request.body)    
-            print(f"bird_of_the_day_view {data}")        
-            latitude = data.get('lat','')
-            longitude = data.get('lon','')     
-            howmany = data.get('howmany','')  
-            print(f"bird_of_the_day_view {latitude}, {longitude}, {howmany}")                           
-            recent_observations_data = fetch_recent_observations_in_a_region(
-                latitude,
-                longitude,
-                howmany
-            ) 
-            if len(recent_observations_data['data']) > 0 :            
-                return JsonResponse({
-                    'data': recent_observations_data['data']})        
-        else:
-            return JsonResponse({'error': 'Nenhum passaro encontrado!'})
-                       
-    except Exception as e:
-       return JsonResponse({'error': str(e)})
-            
-def recent_observations_view(request):
-    print(f"recent_observations_view {request.method}")
-    recent_observations_data = None
-    error = None
-    if request.method == 'POST':
-        form = RecentsForm(request.POST)
-        if form.is_valid():
-            latitude = request.POST["lat"]
-            longitude = request.POST["lon"]
-            howmany = request.POST['howmany']        
-            recent_observations_data = fetch_recent_observations_in_a_region(
-                latitude,longitude,howmany)                        
-            print(f"recent_observations_view {latitude},{longitude},{howmany}")
-            
-            if len(recent_observations_data['data']) > 0 :
-                recent_observations_data = recent_observations_data
-            else:
-                error = 'Nenhuma observação recente encontrada!'           
-        else:  
-            pass
-
-    form = RecentsForm()      
-    return render(request, "passarinhar/recentes.html", {
-            "title":'Avistamentos recentes na região',
-            "form": form,
-            "error":error,
-            "recent_observations_data": recent_observations_data
-                  })

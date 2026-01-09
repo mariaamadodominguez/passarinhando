@@ -24,10 +24,17 @@
                 </li>
                 {% endif %}
                 <li class="nav-item">
+                    <a id="allpost" class="nav-link" href="{% url 'passarinhar:index' %}">Passarinho do Dia</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" id="geo-link" href="{% url 'passarinhar:recents'%}">Avistamentos recentes</a>
                 </li>
                 <li class="nav-item">
-                    <a id="allpost" class="nav-link" href="{% url 'passarinhar:index' %}">Todas as Postagens</a>
+                    <a class="nav-link" id="geo-link" href="{% url 'passarinhar:locals'%}">Locais nas redondezas</a>
+                </li>
+                
+                <li class="nav-item">
+                    <a id="allpost" class="nav-link" href="{% url 'passarinhar:foro' %}">Foro</a>
                 </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item">

@@ -26,13 +26,15 @@
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{ forloop.counter0 }}"> {{ recent_observation.comName }}</h3>
         <ul>
-            <li>Código da espécie:<span id="comName{{ forloop.counter0 }}"> {{ recent_observation.speciesCode }}</span>
+            <li>Código da espécie: <span id="comName{{ forloop.counter0 }}">{{ recent_observation.speciesCode }}</span>
             </li>
-            <li>Nome científico:<span id="sciName{{ forloop.counter0 }}"> {{ recent_observation.sciName }}</span></li>
-            <li>Data da observação:<span id="obsDt{{ forloop.counter0 }}"> {{ recent_observation.obsDt }}</span></li>
-            <li>Local:<span id="locName{{ forloop.counter0 }}"> {{recent_observation.locName}}</span></li>
-            <li>Quantidade:<span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
-            <img class ='bird-img' id='{{recent_observation.comName}}' src="" alt="{{ recent_observation.sciName }}">
+            <li>Nome científico: <span id="sciName{{ forloop.counter0 }}">{{ recent_observation.sciName }}</span></li>
+            <li>Data da observação: <span id="obsDt{{ forloop.counter0 }}">{{ recent_observation.obsDt }}</span></li>
+            <li>Local: <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}</span></li>
+            <li>Quantidade: <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
+            <div class="p-3">     
+                <img class ='bird-img' id='{{recent_observation.comName}}' src="" alt="{{ recent_observation.sciName }}">
+            </div>
         </ul>
         
     </div>
@@ -41,7 +43,7 @@
 {% endif %}
 {% block script %}
     <script src="{% static 'passarinhar/geoloc.js' %}"></script>
-    <script src="{% static 'passarinhar/recents.js' %}"></script>
+    <script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
 
 {% endblock %}
 {% endblock %}

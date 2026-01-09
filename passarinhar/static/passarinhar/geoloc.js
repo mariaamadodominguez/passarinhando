@@ -1,11 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     
     function getLocation() {
-        console.log('Geolocation is supported by this browser?');
-        console.log("sessionStorage.geolocation", sessionStorage.geolocation);
+        // console.log("sessionStorage.geolocation", sessionStorage.geolocation);
         if (sessionStorage.geolocation) {
-            console.log("getLocation sessionStorage.lat", sessionStorage.lat);
-            console.log("getLocation sessionStorage.lon", sessionStorage.lon);
             showPosition(sessionStorage.lat, sessionStorage.lon);
 
         } else {
@@ -31,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('#crnt-lon').value = lon;     
           
     }
-    
+
     getLocation();
     
 })     

@@ -1,0 +1,57 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2 id="page-title">{{ title }}</h2>
+
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
+<div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
+{% endif %}
+
+<script>
+    var show_on_mape_url = "{% url 'passarinhar:showOnMap' %}";
+</script>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        {{form.as_p}}
+    </div class="form-group">
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Procurar</button>
+    </div>     
+</form>
+{% if hotspots_nearby_data %}
+<div id="map">
+        {% csrf_token %}
+        <span id="map-btn" class="map-button button">Mostrar no mapa</span>
+        {{nearby_map|safe}}
+</div>
+<div class='container'>
+    {% for local in hotspots_nearby_data.data %}
+    <div class="p-1 my-1 bg-white text-dark border border-secondary">
+        <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
+        <ul>
+            <li>Id. do local: <span id="locId{{forloop.counter0}}">{{local.locId}}</span></li>
+            <li>Código da região: <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
+            <li>Coords:<span id="coords{{forloop.counter0}}"> {{local.lat}}- {{local.lng}}</span></li>
+            <li>Última Observação:<span id="latestObsDt{{forloop.counter0}}">{{local.latestObsDt}}</span></li>
+            <li>Total Especies: <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>  
+        </ul>
+        <div id="recent-div{{local.locId}}">
+            <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
+            <button id="recent-btn{{local.locId}}" class="button recent" data-id="{{local.locId}}">Avistamentos recentes</button>
+        </div>
+            
+    </div>
+    {% endfor %}
+    
+</div>
+{% endif %}
+{% block script %}
+    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+ 
+{% endblock %}
+{% endblock %}
