@@ -19,5 +19,4 @@ urlpatterns = [
     path("addRemoveFollowing", views.addRemoveFollowing, name='addRemoveFollowing'),    
     path("updPostContent", views.updPostContent, name='updPostContent'),   
     path("birdoftheday", views.bird_of_the_day_view, name="birdoftheday"),
-    path("showOnMap", views.show_on_map, name="showOnMap"),
 ]

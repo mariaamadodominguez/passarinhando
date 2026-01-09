@@ -10,10 +10,6 @@
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
 
-<script>
-    var show_on_mape_url = "{% url 'passarinhar:showOnMap' %}";
-</script>
-
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
@@ -24,12 +20,11 @@
     </div>     
 </form>
 {% if hotspots_nearby_data %}
-<div id="map">
-        {% csrf_token %}
-        <span id="map-btn" class="map-button button">Mostrar no mapa</span>
-        {{nearby_map|safe}}
-</div>
 <div class='container'>
+    <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
+        <h2 id="folium_map">Mapa</h2>
+        {{ nearby_map|safe }}
+    </div>
     {% for local in hotspots_nearby_data.data %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
@@ -43,15 +38,12 @@
         <div id="recent-div{{local.locId}}">
             <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
             <button id="recent-btn{{local.locId}}" class="button recent" data-id="{{local.locId}}">Avistamentos recentes</button>
-        </div>
-            
+        </div>            
     </div>
-    {% endfor %}
-    
+    {% endfor %}    
 </div>
 {% endif %}
 {% block script %}
-    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
- 
+    <script src="{% static 'passarinhar/geoloc.js' %}"></script> 
 {% endblock %}
 {% endblock %}

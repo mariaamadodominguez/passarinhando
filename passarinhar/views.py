@@ -58,6 +58,8 @@ def hotspots_nearby_view(request):
     print(f"hotspots_nearby_view {request.method}")
     hotspots_nearby_data = None
     error = None
+    home_map = None
+    map_html = None
     if request.method == 'POST':
         form = LocalsForm(request.POST)
         if form.is_valid():
@@ -71,7 +73,8 @@ def hotspots_nearby_view(request):
             if len(hotspots_nearby_data['data']) == 0 :
                 error = 'Nenhum local encontrado!' 
             else:
-                show_on_map(latitude, longitude, hotspots_nearby_data['data'])                      
+                home_map = show_on_map(latitude, longitude, hotspots_nearby_data['data'])
+                map_html = home_map._repr_html_()                      
         else:  
             pass
     else:
@@ -80,21 +83,23 @@ def hotspots_nearby_view(request):
             "title":'Locais de avistamento na região',
             "form": form,
             "error":error,
-            "hotspots_nearby_data": hotspots_nearby_data
-                  })
+            "hotspots_nearby_data": hotspots_nearby_data,
+            "nearby_map":map_html
+        })
 
 def show_on_map(latitude, longitude, hotspots_nearby):
-    # For a post request, add/remove following
-    home_lat = latitude
-    home_lon = longitude
-    near_by = hotspots_nearby
-    home_map = folium.Map(location=[home_lat, home_lon], zoom_start=8)
+    
+    lat_list = [item['lat'] for item in hotspots_nearby]
+    lng_list = [item['lng'] for item in hotspots_nearby]
+    locName_list = [item['locName'] for item in hotspots_nearby] 
+    
+    home_map = folium.Map(location=[latitude, longitude], zoom_start=12)
     
     # instantiate a feature group for the nearby stations in the dataframe
     nearby_places = folium.map.FeatureGroup()
 
     # loop through the 20 stations nearby and add each to the feature group
-    for lat, lng, in zip(near_by.lat, near_by.lng):
+    for lat, lng, in zip(lat_list, lng_list):
         nearby_places.add_child(
             folium.features.CircleMarker(
                 [lat, lng],
@@ -106,18 +111,13 @@ def show_on_map(latitude, longitude, hotspots_nearby):
             )
         )
     # add pop-up text to each marker on the map
-    latitudes = list(near_by.lat)
-    longitudes = list(near_by.lng)
-    labels = list(near_by.locName)
-
-    for lat, lng, label in zip(latitudes, longitudes, labels):
+    folium.Marker([latitude, longitude], popup="Sua localização").add_to(home_map)
+    for lat, lng, label in zip(lat_list, lng_list, locName_list):
         folium.Marker([lat, lng], popup=label).add_to(home_map)
     # add places to map
     home_map.add_child(nearby_places)
-    context = {"nearby_map":home_map}
-    return context
-    # render(request, "passarinhar/locais.html",context)
-
+    return home_map
+    
 def bird_of_the_day_view(request):
     try:         
         if request.headers.get('content-type') == 'application/json':        
