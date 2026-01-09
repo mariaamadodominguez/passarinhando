@@ -69,7 +69,9 @@ def hotspots_nearby_view(request):
             print(f"hotspots_nearby {latitude},{longitude},{dist}")
             
             if len(hotspots_nearby_data['data']) == 0 :
-                error = 'Nenhum local encontrado!'           
+                error = 'Nenhum local encontrado!' 
+            else:
+                show_on_map(latitude, longitude, hotspots_nearby_data['data'])                      
         else:  
             pass
     else:
@@ -81,14 +83,12 @@ def hotspots_nearby_view(request):
             "hotspots_nearby_data": hotspots_nearby_data
                   })
 
-def show_on_map(request):
+def show_on_map(latitude, longitude, hotspots_nearby):
     # For a post request, add/remove following
-    data = json.loads(request.body)        
-    if request.method == "POST":
-        home_lat = data.get('lat', '')
-        home_lon = data.get('lon', '')
-        near_by = data.get('near_by', '')
-        home_map = folium.Map(location=[home_lat, home_lon], zoom_start=8)
+    home_lat = latitude
+    home_lon = longitude
+    near_by = hotspots_nearby
+    home_map = folium.Map(location=[home_lat, home_lon], zoom_start=8)
     
     # instantiate a feature group for the nearby stations in the dataframe
     nearby_places = folium.map.FeatureGroup()
@@ -115,7 +115,8 @@ def show_on_map(request):
     # add places to map
     home_map.add_child(nearby_places)
     context = {"nearby_map":home_map}
-    return render(request, "passarinhar/locais.html",context)
+    return context
+    # render(request, "passarinhar/locais.html",context)
 
 def bird_of_the_day_view(request):
     try:         
