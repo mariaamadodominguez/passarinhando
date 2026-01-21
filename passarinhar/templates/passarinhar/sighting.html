@@ -1,0 +1,30 @@
+{% extends "passarinhar/layout.html" %}
+{% load l10n %}
+{% block body %}
+    {% if message %}
+        {% if updated %}
+        <div class="alert alert-success" role="alert">
+            {{ message }}
+        </div>
+        {% else %}
+        <div class="alert alert-warning" role="alert">
+            {{ message }}
+        </div>
+        {% endif %}
+    {% endif %}
+    <div class="p-1 my-1 bg-white text-dark border border-secondary">
+        <h2>{{ sighting.title }}</h2>
+        <img src="{{sighting.url_img}}" alt="{{sighting.title}}" title="{{sighting.title}}" class="img-responsive" />      
+        <p>{{ sighting.description }}</p>
+        <hr>        
+        <ul>
+        <li>Especie: {{ sighting.spice }}</li>
+        <li>Usuário: {{ sighting.birder }}</li>
+        <li>Local: {{ sighting.place }}</li>
+        <li>Data: {{ sighting.date_created }}</li>
+        </ul> 
+        <div class="container">                                             
+            <a href="{% url 'passarinhar:allsightings' %}">Voltar para a lista de avistamentos</a>                    
+        </div>
+    </div>  
+{% endblock %}

@@ -1,15 +1,16 @@
 # Create your views here.
+from dbm import error
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from .models import User, Post, Follower
+from .models import User, Post, Follower, Sighting, Place
 from django.core.paginator import Paginator
 from django.conf import settings
 #from django.contrib.gis.geoip2 import GeoIP2
-from .forms import RecentsForm, LocalsForm
+from .forms import CommentForm, RecentsForm, LocalsForm
 import requests
 import folium
 
@@ -53,6 +54,62 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
     return {
         'data': data 
     }
+
+def allplaces(request):    
+    
+    allplaces = Place.objects.all()
+    allplaces = allplaces.order_by("-pk").all()   
+    p = Paginator(allplaces, 10)
+    page_number = request.GET.get('page')
+    page_obj = p.get_page(page_number)
+    
+    return render(request, "passarinhar/places.html", {
+        'title':"Locais de Avistamento Registrados",
+        "page_name": 'allplaces',        
+        'page_obj':page_obj,
+        })
+            
+def addFavourite(request):
+    
+    data = json.loads(request.body)    
+    place_id = data.get('place_id','')
+    fav = None
+    try:
+        place = Place.objects.get(pk=place_id)
+        currentUser = Follower.objects.filter(user = request.user.id)
+        currentUser = currentUser[0]
+        if place in currentUser.favourite_places.all():    
+            fav = False
+            currentUser.favourite_places.remove(place) 
+        else:
+            fav = True
+            currentUser.favourite_places.add(place)                
+        currentUser.save()
+
+    except User.DoesNotExist:
+        raise Http404("Place not found.")
+
+    
+    return JsonResponse({"userFav": fav})        
+          
+def favourites(request):    
+
+    # Filter places returned based on favourites:
+    user = Follower.objects.filter(user = request.user.id)    
+    fav_places = Place.objects.filter(id__in=user.values_list("favourite_places", flat=True))                    
+    
+    # Return all user favourite places in reverse chronologial order
+    fav_places = fav_places.order_by("-pk").all()
+
+    p = Paginator(fav_places, 10)
+    page_number = request.GET.get('page')
+    page_obj = p.get_page(page_number)
+
+    return render(request, "passarinhar/places.html", {
+        'title':"Locais de Avistamento Favoritos",
+        "page_name": 'favourites',        
+        'page_obj':page_obj,
+        })    
 
 def hotspots_nearby_view(request):
     print(f"hotspots_nearby_view {request.method}")
@@ -120,9 +177,10 @@ def show_on_map(latitude, longitude, hotspots_nearby):
     
 def bird_of_the_day_view(request):
     try:         
-        if request.headers.get('content-type') == 'application/json':        
-            latitude = ''
-            longitude = 'lon'     
+        if request.headers.get('content-type') == 'application/json':      
+            data = json.loads(request.body)    
+            latitude = data.get('lat','')
+            longitude = data.get('lon','')    
             howmany = 1  
             recent_observations_data = fetch_recent_observations_in_a_region(
                 latitude,
@@ -138,8 +196,57 @@ def bird_of_the_day_view(request):
     except Exception as e:
        return JsonResponse({'error': str(e)})
             
+def addNewLocal(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)    
+        lat = data.get('lat','0')
+        lon = data.get('lon','0')
+        current = Place.objects.filter(lat=data.get('lat',''), lon=data.get('lon') )
+        if current:
+            message = 'Local já cadastrado.'                                
+        else:
+            locId = data.get('locId','')
+            place = data.get('place','')
+            subnational2Code = data.get('subnational2Code','')
+            latestObsDt = data.get('latestObsDt','')
+            numSpeciesAllTime = data.get('numSpeciesAllTime','')
+               
+            new_local = Place(
+                place=place,
+                lat=lat,
+                lon=lon,
+                subnational2Code=subnational2Code,
+                locId=locId,
+                latestObsDt=latestObsDt,
+                numSpeciesAllTime=numSpeciesAllTime,
+            )
+            new_local.save()    
+            message = 'Local salvo com sucesso..'
+    return JsonResponse({
+        "message": message})
+
+def localrecents(request, lat, lon):
+    recent_observations_data = None
+    error = None
+    max_views = 30   
+    current = Place.objects.filter(lat=lat, lon=lon)
+    if current:
+        title = f"Avistamentos recentes perto de {current[0].place}"
+    else:
+        title = f"Avistamentos recentes em {lat}, {lon}"
+    recent_observations_data = fetch_recent_observations_in_a_region(
+        lat, lon, max_views
+    )
+    if len(recent_observations_data['data']) == 0 :
+        error = 'Nenhuma observação recente encontrada!'
+    return render(request, "passarinhar/recentes.html", {
+            "title":title,
+            "error":error,
+            "recent_observations_data": recent_observations_data
+                  })
+    
 def recent_observations_view(request):
-    print(f"recent_observations_view {request.method}")
+    
     recent_observations_data = None
     error = None
     if request.method == 'POST':
@@ -147,25 +254,53 @@ def recent_observations_view(request):
         if form.is_valid():
             latitude = request.POST["lat"]
             longitude = request.POST["lon"]
-            howmany = request.POST['howmany']        
+            howmany = request.POST['quantos']        
             recent_observations_data = fetch_recent_observations_in_a_region(
-                latitude,longitude,howmany)                        
-            print(f"recent_observations_view {latitude},{longitude},{howmany}")
-            
-            if len(recent_observations_data['data']) > 0 :
-                recent_observations_data = recent_observations_data
-            else:
+                latitude,longitude,howmany)                                
+            if len(recent_observations_data['data']) == 0 :
                 error = 'Nenhuma observação recente encontrada!'           
-        else:  
-            pass
-
-    form = RecentsForm(initial={"howmany":5})      
+    else:  
+        form = RecentsForm(initial={"quantos":5})      
     return render(request, "passarinhar/recentes.html", {
             "title":'Avistamentos recentes na região',
             "form": form,
             "error":error,
             "recent_observations_data": recent_observations_data
                   })
+def mysightings(request):      
+    mysightings = Sighting.objects.filter(birder=request.user)
+    print(request.user, mysightings)
+    return render(request, "passarinhar/sightings_list.html", {
+        "title":f"{request.user} - Meus avistamentos",
+        "sightings":mysightings
+        })
+
+def allsightings(request):      
+    allsightings = Sighting.objects.all()
+    # order_by("-date_created").all()
+    return render(request, "passarinhar/sightings_list.html", {
+        "title":"Todos os avistamentos",
+        "sightings": allsightings
+        })
+
+def sighting(request, sighting_id):
+    # For a post request, show the listing details
+    try:
+        form = CommentForm()        
+        currentSighting = Sighting.objects.get(id=sighting_id)                     
+    except Sighting.DoesNotExist:
+        raise Http404("Sighting not found.")
+    return render(request, "passarinhar/sighting.html", {
+        'form': form,
+        "sighting": currentSighting,                 
+    })
+
+def index(request):
+    return render(request, 'passarinhar/index.html', {
+        'title':"Passarinho do dia",
+        "page_name": 'passarinho'
+        })      
+
 def foro(request):
     allposts = Post.objects.all()
     
@@ -179,17 +314,9 @@ def foro(request):
     return render(request, "passarinhar/foro.html", {
         'title':"Foro",
         "page_name": 'foro',
-        #'posts':allposts,
         'page_obj':page_obj,
     })
-    
-def index(request):
-    
-    return render(request, 'passarinhar/index.html', {
-        'title':"Passarinho do dia",
-        "page_name": 'passarinho'
-        })      
-                    
+                        
 def following(request):    
     
     # Filter post returned based on following":
@@ -206,7 +333,6 @@ def following(request):
     return render(request, "passarinhar/foro.html", {
         'title':"Seguidos",
         "page_name": 'following',
-        #'posts':posts,        
         'page_obj':page_obj,
         })
 
@@ -295,7 +421,6 @@ def profile(request, username):
         "profile_obj": profile,
         "followers": followers,
         "following": following,
-        #"posts": profilePosts,
         "page_obj": page_obj,
         "follow_label":follow_label,
     }

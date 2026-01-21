@@ -1,0 +1,23 @@
+{% extends "passarinhar/layout.html" %}
+{% load l10n %}
+
+{% block body %}
+    <h2>{{ title }}</h2>
+    {% for sighting in sightings %}
+        <div class="p-1 my-1 bg-white text-dark border border-secondary">
+            <h4><a href = "{% url 'passarinhar:sighting' sighting.id %}">{{ sighting.common_name }}</a></h4>
+            <div class="image">
+                <img src="{{ sighting.url_img }}" alt="{{ sighting.title }}" title="{{ sighting.common_name }}" class="img-responsive" />
+            </div>
+            <div class="details">                    
+                {{ sighting.description }}
+                <div class="info">                        
+                    {{ sighting.spice }}
+                    {{ sighting.place }}
+                    {{ sighting.birder }}
+                    {{ sighting.date_created }}
+                </div>
+            </div>        
+        </div>                                                
+    {% endfor %}      
+{% endblock %}

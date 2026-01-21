@@ -12,3 +12,4 @@ const displayBirdImg = async (img) => {
     const img_url =  await searchWikiData(img.id, img.alt);
     document.getElementById(img.id).src = img_url;    
 }
+

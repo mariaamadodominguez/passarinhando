@@ -10,7 +10,7 @@
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
 
-
+{% if title == "Avistamentos recentes na região" %}    
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
@@ -20,11 +20,23 @@
         <button type="submit" class="btn btn-primary">Procurar</button>
     </div>     
 </form>
+{% else %}
+    <div class="container">         
+    <a href="{{ request.META.HTTP_REFERER }}">Voltar para a lista de locais</a>  
+    <!-- Option B: A link that looks like a button -->
+    <a href="javascript:void(0);" onclick="goBack()">Return to previous page</a>
+             
+    </div>
+{% endif %}
 {% if recent_observations_data %}
 <div class='container'>
     {% for recent_observation in recent_observations_data.data %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{ forloop.counter0 }}"> {{ recent_observation.comName }}</h3>
+        {% if user.is_authenticated  %}
+            {% csrf_token %}
+            <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar especie</button>
+         {% endif %}                                
         <ul>
             <li>Código da espécie: <span id="comName{{ forloop.counter0 }}">{{ recent_observation.speciesCode }}</span>
             </li>
@@ -42,7 +54,16 @@
 </div>
 {% endif %}
 {% block script %}
-    <script src="{% static 'passarinhar/geoloc.js' %}"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+    {% if title == "Avistamentos recentes na região" %}
+        <script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
+    {% endif %}
+   
     <script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
 
 {% endblock %}

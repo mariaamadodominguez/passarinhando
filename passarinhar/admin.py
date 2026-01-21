@@ -7,10 +7,12 @@ class PostAdmin(admin.ModelAdmin):
 class FollowerAdmin(admin.ModelAdmin):
     list_display = ("id","user", "following_count")    
 # Register your models here.
-from .models import User, Follower, Post, Comment
+from .models import Spice, Sighting, Place, User, Follower, Post, Comment
 # Register your models here.
 admin.site.register(User)
 admin.site.register(Follower, FollowerAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)
-
+admin.site.register(Place)
+admin.site.register(Spice)
+admin.site.register(Sighting)

@@ -1,17 +1,22 @@
 import { searchWikiData } from './utils.js';
-
+import { getCurrentLocation} from './utils.js';
 document.addEventListener('DOMContentLoaded', function () {
-    function showBirdofTheDay() {
+    async function showBirdofTheDay() {
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;            
         const url = '/birdoftheday';
         document.getElementById(`bird-of-the-day`).style.display = "none";
-
-        fetch(url, { 
+        await getCurrentLocation();
+        console.log('showBirdofTheDay:', sessionStorage.lat, sessionStorage.lon);
+        await fetch(url, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrftoken // Include the CSRF token in the headers
             },
+            body: JSON.stringify({                
+              lat : sessionStorage.lat,
+              lon : sessionStorage.lon,
+              })
         })        
         .then(response => response.json())
         .then(res => {

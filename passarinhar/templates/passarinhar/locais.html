@@ -28,22 +28,34 @@
     {% for local in hotspots_nearby_data.data %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
+        <div id="coords{{forloop.counter0}}">Coords:
+            <span id="lat{{forloop.counter0}}">{{local.lat}}</span>-
+            <span id="lon{{forloop.counter0}}">{{local.lng}}</span>
+        </div>
+            
+        {% if user.is_authenticated  %}
+            {% csrf_token %}
+            <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar local</button>
+         {% endif %}                                        
         <ul>
             <li>Id. do local: <span id="locId{{forloop.counter0}}">{{local.locId}}</span></li>
             <li>Código da região: <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
-            <li>Coords:<span id="coords{{forloop.counter0}}"> {{local.lat}}- {{local.lng}}</span></li>
             <li>Última Observação:<span id="latestObsDt{{forloop.counter0}}">{{local.latestObsDt}}</span></li>
             <li>Total Especies: <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>  
         </ul>
-        <div id="recent-div{{local.locId}}">
+        <div id="recent-obs{{local.locId}}">
             <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
-            <button id="recent-btn{{local.locId}}" class="button recent" data-id="{{local.locId}}">Avistamentos recentes</button>
+            <a href = "{% url 'passarinhar:localrecents' local.lat local.lng %}">Avistamentos recentes</a>
         </div>            
     </div>
     {% endfor %}    
 </div>
 {% endif %}
 {% block script %}
-    <script src="{% static 'passarinhar/geoloc.js' %}"></script> 
+    <script type="module"src="{% static 'passarinhar/geoloc.js' %}"></script> 
+    {% if user.is_authenticated  %}
+        <script src="{% static 'passarinhar/locals.js' %}"></script>
+    {% endif %}     
 {% endblock %}
+
 {% endblock %}

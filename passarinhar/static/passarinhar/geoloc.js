@@ -1,34 +1,21 @@
+import { getCurrentLocation} from './utils.js';
 document.addEventListener('DOMContentLoaded', function () {
     
-    function getLocation() {
-        // console.log("sessionStorage.geolocation", sessionStorage.geolocation);
-        if (sessionStorage.geolocation) {
-            showPosition(sessionStorage.lat, sessionStorage.lon);
-
-        } else {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(success);
-            } else {
-                const current_pos = document.getElementById("geoloc");
-                current_pos.innerHTML = "Geolocation is not supported by this browser.";
-            }
+    async function getLocation() {
+        console.log("getLocation: sessionStorage.geolocation", sessionStorage.geolocation);
+        if (!sessionStorage.geolocation){
+            await getCurrentLocation();
         }
-    }
-    function success(position) {
-        console.log(position);
-        sessionStorage.geolocation = 1;
-        sessionStorage.lat = position.coords.latitude;
-        sessionStorage.lon = position.coords.longitude;
-        showPosition(sessionStorage.lat, sessionStorage.lon);
-    }
-
-    function showPosition(lat, lon) {
-                                                      
-        document.querySelector('#crnt-lat').value = lat;
-        document.querySelector('#crnt-lon').value = lon;     
-          
+        console.log("getLocation: sessionStorage.geolocation after getCurrentLocation", sessionStorage.geolocation);   
+        console.log("getLocation: sessionStorage.lat", sessionStorage.lat);
+        console.log("getLocation: sessionStorage.lon", sessionStorage.lon);  
+        const current_latpos = document.getElementById("crnt-lat");
+        const current_lonpos = document.getElementById("crnt-lon");
+        current_latpos.value = sessionStorage.lat;
+        current_lonpos.value = sessionStorage.lon;
+        
     }
 
-    getLocation();
+    getLocation()
     
 })     

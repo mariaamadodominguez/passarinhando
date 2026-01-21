@@ -1,0 +1,28 @@
+{% extends "passarinhar/layout.html" %}
+{% block body %}    
+    <div class="row">   
+        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+            <h2>Registrar Avistamento</h2>   
+            {% if message %} 
+                {% if updated %}
+                     <div class="alert alert-success" role="alert">
+                        {{ message }}
+                    </div>
+                {% else %}
+                     <div class="alert alert-warning" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endif %}
+            <form action="{% url 'passarinhar:addNewSighting' %}" method="post"> 
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form }}
+                </div class="form-group">
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Registrar</button>                
+                </div>  
+            </form>
+        </div>
+    </div>
+{% endblock %}
