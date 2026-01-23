@@ -93,23 +93,36 @@ def addFavourite(request):
     return JsonResponse({"userFav": fav})        
           
 def favourites(request):    
-
+    error = None
+    
     # Filter places returned based on favourites:
     user = Follower.objects.filter(user = request.user.id)    
     fav_places = Place.objects.filter(id__in=user.values_list("favourite_places", flat=True))                    
     
     # Return all user favourite places in reverse chronologial order
     fav_places = fav_places.order_by("-pk").all()
+    
 
-    p = Paginator(fav_places, 10)
+    p = Paginator(fav_places, 30)
     page_number = request.GET.get('page')
     page_obj = p.get_page(page_number)
 
-    return render(request, "passarinhar/places.html", {
-        'title':"Locais de Avistamento Favoritos",
-        "page_name": 'favourites',        
-        'page_obj':page_obj,
-        })    
+    #return render(request, "passarinhar/places.html", {
+    #    'title':"Locais de Avistamento Favoritos",
+    #    "page_name": 'favourites',        
+    #    'page_obj':page_obj,
+    #    })    
+    hotspots_nearby_data = page_obj    
+    home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "favourite", hotspots_nearby_data)
+    map_html = home_map._repr_html_()                      
+    form = LocalsForm(initial={"dist":5})
+    return render(request, "passarinhar/locais.html", {
+            "title":'Locais Favoritos',
+            "form": form,
+            "error":error,
+            "hotspots_nearby_data": hotspots_nearby_data,
+            "nearby_map":map_html
+        })
 
 def hotspots_nearby_view(request):
     print(f"hotspots_nearby_view {request.method}")
@@ -130,7 +143,8 @@ def hotspots_nearby_view(request):
             if len(hotspots_nearby_data['data']) == 0 :
                 error = 'Nenhum local encontrado!' 
             else:
-                home_map = show_on_map(latitude, longitude, hotspots_nearby_data['data'])
+                hotspots_nearby_data = hotspots_nearby_data['data']
+                home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
                 map_html = home_map._repr_html_()                      
         else:  
             pass
@@ -144,11 +158,17 @@ def hotspots_nearby_view(request):
             "nearby_map":map_html
         })
 
-def show_on_map(latitude, longitude, hotspots_nearby):
+def show_on_map(latitude, longitude, type, hotspots_nearby):
     
-    lat_list = [item['lat'] for item in hotspots_nearby]
-    lng_list = [item['lng'] for item in hotspots_nearby]
-    locName_list = [item['locName'] for item in hotspots_nearby] 
+    
+    if type != "hotspot":
+        locName_list = [item.place for item in hotspots_nearby] 
+        lng_list = [item.lon for item in hotspots_nearby]
+        lat_list = [item.lat for item in hotspots_nearby]
+    else:
+        lng_list = [item['lng'] for item in hotspots_nearby]
+        lat_list = [item['lat'] for item in hotspots_nearby]
+        locName_list = [item['locName'] for item in hotspots_nearby] 
     
     home_map = folium.Map(location=[latitude, longitude], zoom_start=12)
     

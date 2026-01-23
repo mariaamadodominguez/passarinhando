@@ -10,7 +10,7 @@
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
 
-{% if title == "Avistamentos recentes na região" %}    
+{% if title == "Avistamentos recentes na região" %}
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
@@ -18,25 +18,23 @@
     </div class="form-group">
     <div class="form-group">
         <button type="submit" class="btn btn-primary">Procurar</button>
-    </div>     
+    </div>
 </form>
 {% else %}
-    <div class="container">         
-    <a href="{{ request.META.HTTP_REFERER }}">Voltar para a lista de locais</a>  
-    <!-- Option B: A link that looks like a button -->
-    <a href="javascript:void(0);" onclick="goBack()">Return to previous page</a>
-             
-    </div>
+<div class="container">
+    <a href="javascript:void(0);" onclick="goBack()">Voltar para a lista de locais</a>
+
+</div>
 {% endif %}
 {% if recent_observations_data %}
 <div class='container'>
     {% for recent_observation in recent_observations_data.data %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{ forloop.counter0 }}"> {{ recent_observation.comName }}</h3>
-        {% if user.is_authenticated  %}
-            {% csrf_token %}
-            <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar especie</button>
-         {% endif %}                                
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar especie</button>
+        {% endif %}
         <ul>
             <li>Código da espécie: <span id="comName{{ forloop.counter0 }}">{{ recent_observation.speciesCode }}</span>
             </li>
@@ -44,27 +42,27 @@
             <li>Data da observação: <span id="obsDt{{ forloop.counter0 }}">{{ recent_observation.obsDt }}</span></li>
             <li>Local: <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}</span></li>
             <li>Quantidade: <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
-            <div class="p-3">     
-                <img class ='bird-img' id='{{recent_observation.comName}}' src="" alt="{{ recent_observation.sciName }}">
+            <div class="p-3">
+                <img class='bird-img' id='{{recent_observation.comName}}' src="" alt="{{ recent_observation.sciName }}">
             </div>
         </ul>
-        
+
     </div>
     {% endfor %}
 </div>
 {% endif %}
 {% block script %}
-    <script>
-        function goBack() {
-            window.history.back();
-        }
-    </script>
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
 
-    {% if title == "Avistamentos recentes na região" %}
-        <script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
-    {% endif %}
-   
-    <script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
+{% if title == "Avistamentos recentes na região" %}
+<script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
+{% endif %}
+
+<script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
 
 {% endblock %}
 {% endblock %}
