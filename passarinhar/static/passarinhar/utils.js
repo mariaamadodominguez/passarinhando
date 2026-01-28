@@ -19,18 +19,15 @@ export const searchWikiData = async (comName, sciName) => {
     await fetch(`${pt_url}?${params}`)
         .then(response => response.json())
         .then(res => {
-            console.log(res)
+            //console.log(res)
             for (var i = 0; i < Object.keys(res.query.pages).length; i++) {
                 pageData = res.query.pages[Object.keys(res.query.pages)[i]];
                 if (pageData.thumbnail) {
                     img_url = pageData.thumbnail.source
-                    console.log(i, pageData, img_url)
+                    //console.log(i, pageData, img_url)
                 }
             }
-            //pageData = res.query.pages[Object.keys(res.query.pages)[0]];
-            //if (pageData.thumbnail) {
-            //    img_url = pageData.thumbnail.source
-            //}
+
         })
         .catch(
             (error) => console.error('Error:', error)
@@ -79,14 +76,14 @@ function getCoordinates() {
 export const getCurrentLocation = async () => {
     try {
         const position = await getCoordinates();
-        sessionStoragegeolocation = 1;
+        sessionStorage.geolocation = 1;
         sessionStorage.lat = position.coords.latitude;
         sessionStorage.lon = position.coords.longitude;
-        console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lon);
+        // console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lon);
         // Use the latitude and longitude as needed
     } catch (error) {
         console.error("Utils: Error retrieving location:", error.message);
-        sessionStoragegeolocation = 0;
+        sessionStorage.geolocation = 0;
         // Handle the error appropriately in your UI
     }
 }

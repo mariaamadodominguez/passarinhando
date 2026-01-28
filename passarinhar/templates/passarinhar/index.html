@@ -11,19 +11,19 @@
     <div id="bird-of-the-day" class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="common-name"></h3>
         <ul>
-        <li id="spiceCode"></li>
-        <li id="sci-name"></li>
-        <li id="obs-date"></li>
-        <li id="loc-name"></li>
-        <div class="p-5">
-            <img id="bird-img" src="#" alt="com_name wiki image">
-        </div>
+            <li id="sci-name"></li>
+            <li id="spiceCode"></li>
+            <li id="obs-date"></li>
+            <li id="loc-name"></li>
+            <div class="p-5">
+                <img id="bird-img" src="#" alt="com_name wiki image">
+            </div>
         </ul>
-    </div>                           
-</div>   
+    </div>
+</div>
 
 {% block script %}
-    <!--script src="{% static 'passarinhar/geoloc.js' %}"></script-->
-    <script type="module" src="{% static 'passarinhar/birdoftheday.js' %}"></script>
+<!--script src="{% static 'passarinhar/geoloc.js' %}"></script-->
+<script type="module" src="{% static 'passarinhar/birdoftheday.js' %}"></script>
 {% endblock %}
 {% endblock %}

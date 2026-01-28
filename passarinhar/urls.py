@@ -26,6 +26,7 @@ urlpatterns = [
     path("addNewPost", views.addNewPost, name="addNewPost"), 
     path("addNewLike", views.addNewLike, name="addNewLike"),
     path("addNewLocal", views.addNewLocal, name="addNewLocal"),
+    path("addNewSpice", views.addNewSpice, name="addNewSpice"),
     path("addFavourite", views.addFavourite, name="addFavourite"),
     path("addRemoveFollowing", views.addRemoveFollowing, name='addRemoveFollowing'),    
     path("updPostContent", views.updPostContent, name='updPostContent'),   

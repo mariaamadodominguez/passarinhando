@@ -5,8 +5,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class User(AbstractUser):        
-    pass
+#class User(AbstractUser):        
+#    pass
+
 
 class Place(models.Model):
     place = models.CharField(max_length=100)
@@ -20,29 +21,40 @@ class Place(models.Model):
     region = models.CharField(max_length=100, blank=True)
     def __str__(self) -> str:
         return f"{self.place}"   
-
+        
+class WUser(AbstractUser):
+    favouritesList = models.ManyToManyField(Place, blank=True, related_name="userFavourite")         
+    def serialize(self):
+        return {
+            "user": {self.user.username},
+            "favouritesList": [place.place for place in self.favouritesList.all()],
+        }
+    @property
+    def FavouritesList_count(self):
+        return self.favouritesList.count()    
+   
 class Follower(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name="followerUser")
-    following = models.ManyToManyField(User, blank=True, related_name="following")         
-    favourite_places = models.ManyToManyField(Place, blank=True, related_name="myplaces")         
+    user = models.ForeignKey(WUser, on_delete=models.CASCADE, blank=True, null=True, related_name="followerUser")
+    following = models.ManyToManyField(WUser, blank=True, related_name="following")         
+    #favourite_places = models.ManyToManyField(Place, blank=True, related_name="myplaces")         
     
     def serialize(self):
         return {
             "followUser": {self.user.username},
             "following": [user.username for user in self.following.all()],
-            "favourite_places": [place.place for place in self.favourite_places.all()],
+            #"favourite_places": [place.place for place in self.favourite_places.all()],
         }
     @property
     def following_count(self):
         return self.following.count()
-    @property
-    def favourite_places_count(self):
-        return self.favourite_places.count()
+    #@property
+    #def favourite_places_count(self):
+    #    return self.favourite_places.count()
 
 class Post(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="author")    
+    author = models.ForeignKey(WUser, on_delete=models.CASCADE, related_name="author")    
     post_content = models.TextField(blank=True)
-    likes = models.ManyToManyField(User, blank=True, related_name="likes")         
+    likes = models.ManyToManyField(WUser, blank=True, related_name="likes")         
     timestamp = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def serialize(self):
@@ -66,7 +78,7 @@ class Post(models.Model):
         return self.likes.count()
     
 class Comment(models.Model):
-    author  = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name="commentUser")
+    author  = models.ForeignKey(WUser, on_delete=models.CASCADE, blank=True, null=True, related_name="commentUser")
     post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True, related_name="commentPost")
     comment = models.TextField()
     def serialize(self):
@@ -74,8 +86,8 @@ class Comment(models.Model):
 
 
 class Spice(models.Model):
-    spice_code = models.CharField(max_length=20, null=True, blank=True)
     name = models.CharField(max_length=64, unique=True)
+    spice_code = models.CharField(max_length=20, null=True, blank=True)    
     scientific_name = models.CharField(max_length=64, null=True, blank=True)
     description = models.TextField(blank=True)
     url_spice_img  = models.URLField(blank=True)
@@ -83,12 +95,13 @@ class Spice(models.Model):
         return f"{self.name} - {self.scientific_name}"   
     
 class Sighting(models.Model):
-    birder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owner")
-    common_name = models.CharField(max_length=64, unique=True)
+    birder = models.ForeignKey(WUser, on_delete=models.CASCADE, related_name="owner")
+    common_name = models.CharField(max_length=64)
     description = models.TextField(blank=True)
     url_img = models.URLField(blank=True)
-    spice = models.ForeignKey(Spice, on_delete=models.CASCADE, blank=True,  null=True, related_name="spiceCode")    
-    place = models.ForeignKey(Place, on_delete=models.CASCADE, blank=True,  null=True, related_name="placeCode")    
+    spice = models.ForeignKey(Spice, on_delete=models.CASCADE, blank=True,  null=True, related_name="sighting_spice")    
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, blank=True,  null=True, related_name="sighting_place")    
     date_created = models.DateField(auto_now_add=True)
     def __str__(self) -> str:
         return f"{self.common_name} - {self.description}"            
+

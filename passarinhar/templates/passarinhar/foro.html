@@ -25,7 +25,11 @@
 {% if page_name == 'profile' %}
 <div id="profile-view" style="display: block;">
     <ul>
-        <li>Seguidores: <span id="prf-followers">{{ followers }}</span></li>
+        {% if user.is_authenticated and user == profile_obj %}
+        <li><a id="my-sights" href="{% url 'passarinhar:mysightings' %}">Meus avistamentos</a></li>
+        <li><a id="my-places" href="{% url 'passarinhar:favourites' %}">Meus locais favoritos</a></li>
+        {% endif %}
+        <li id="prf-followers">Seguidores: {{ followers }}</li>
         <li id="prf-following">Seguindo a: {{ following }}</li>
     </ul>
     {% if user.is_authenticated and user != profile_obj %}
@@ -78,16 +82,21 @@
 
         {% if user.is_authenticated and user != post.author %}
         <div id="comments">
-            <div class="form-group">
+            <form id="comment-form" method="post">
                 {% csrf_token %}
-                {{comment_form}}
-            </div>
-            <button id="comment-btn" type="submit" class="button">Comentar</button>
+                <div class="form-group">
+                    <textarea class="form-control" id="comment-content" name="commentcontent"
+                        placeholder="Comentário"></textarea>
+                </div>
+                <div class="form-group">
+                    <button id="comment-btn" type="submit" class="btn btn-primary">Comentar</button>
+                </div>
+            </form>
         </div>
         {% endif %}
     </div>
     {% empty %}
-    <div>*** No post yet***</div>
+    <div>*** Nenhum post***</div>
     {% endfor %}
 </div>
 <nav aria-label="Page navigation">
@@ -109,9 +118,9 @@
     </ul>
 </nav>
 
-{% block script %}   
-    {% if user.is_authenticated %}
-        <script src="{% static 'passarinhar/components.js' %}"></script>
-    {% endif %}
+{% block script %}
+{% if user.is_authenticated %}
+<script src="{% static 'passarinhar/components.js' %}"></script>
+{% endif %}
 {% endblock %}
 {% endblock %}

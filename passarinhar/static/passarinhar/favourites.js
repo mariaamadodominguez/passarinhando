@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (result['userFav'])
           document.querySelector(`#fav-icon${place_id}`).style = "color:red";
         else
-          document.querySelector(`#fav-icon${place_id}`).style = "color:gray"
+          document.querySelector(`#fav-icon${place_id}`).style = "color:gray";
       })
       .catch(error => {
         console.log(error);

@@ -10,7 +10,6 @@
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
 
-{% if title != "Locais Favoritos"%}
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
@@ -20,7 +19,7 @@
         <button type="submit" class="btn btn-primary">Procurar</button>
     </div>
 </form>
-{% endif %}
+
 
 {% if hotspots_nearby_data %}
 <div class='container'>
@@ -31,17 +30,6 @@
 
     {% for local in hotspots_nearby_data %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
-        {% if title == "Locais Favoritos"%}
-        <h3 id="name{{forloop.counter0}}">{{local.place}}</h3>
-        <div id="coords{{forloop.counter0}}">Coords:
-            <span id="lat{{forloop.counter0}}">{{local.lat}}</span>-
-            <span id="lon{{forloop.counter0}}">{{local.lon}}</span>
-        </div>
-        <div id="recent-obs{{local.locId}}">
-            <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
-            <a href="{% url 'passarinhar:localrecents' local.lat local.lon %}">Avistamentos recentes</a>
-        </div>
-        {% else %}
         <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
         <div id="coords{{forloop.counter0}}">Coords:
             <span id="lat{{forloop.counter0}}">{{local.lat}}</span>-
@@ -55,7 +43,6 @@
             <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
             <a href="{% url 'passarinhar:localrecents' local.lat local.lng %}">Avistamentos recentes</a>
         </div>
-        {% endif %}
         <ul>
             <li>Id. do local: <span id="locId{{forloop.counter0}}">{{local.locId}}</span></li>
             <li>Código da região: <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
@@ -63,6 +50,8 @@
             <li>Total Especies: <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>
         </ul>
     </div>
+    {% empty %}
+    <div>*** Nenhum local encontrado***</div>
     {% endfor %}
 </div>
 {% endif %}

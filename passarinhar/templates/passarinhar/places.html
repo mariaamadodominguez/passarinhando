@@ -2,34 +2,43 @@
 {% load static %}
 
 {% block body %}
-
+<h2 id="page-title">{{ title }}</h2>
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
-<div id="allplaces">
-    <h2 id="page-title">{{ title }}</h2>
+{% endif %}
+{% if hotspots_nearby_data %}
+<div class='container' id="allplaces">
+    <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
+        <h2 id="folium_map">Mapa</h2>
+        {{ nearby_map|safe }}
+    </div>
     {% for place in page_obj %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <div id="place{{place.id}}">
-            <div>
-                {{ place.place }}
-                {% if user.is_authenticated %}
-                {% csrf_token %}
-                <span id="fav-btn{{place.id}}" class="fav-button" data-id="{{place.id}}">
-                    {% if place in user.favourite_places.all %}
-                    <i id="fav-icon{{place.id}}" style="color:red" class="fa fa-heart"></i>
-                    {% else %}
-                    <i id="fav-icon{{place.id}}" style="color:grey" class="fa fa-heart"></i>
-                    {% endif %}
-                </span>
+            <h3>{{ place.place }}</h3>
+            {% if user.is_authenticated %}
+            {% csrf_token %}
+            <span id="fav-btn{{place.id}}" class="fav-button" data-id="{{place.id}}">
+                {% if place in user.favouritesList.all %}
+                <i id="fav-icon{{place.id}}" style="color:red" class="fa fa-heart" data-id="{{place.id}}"></i>
+                {% else %}
+                <i id="fav-icon{{place.id}}" style="color:grey" class="fa fa-heart" data-id="{{place.id}}"></i>
                 {% endif %}
+            </span>
+            {% endif %}
+            <div id="recent-obs{{place.id}}">
+                <a href="{% url 'passarinhar:localrecents' place.lat place.lon %}">Avistamentos recentes</a>
             </div>
-        </div>
-        <div>{{ place.state }} {{ place.country }}
-            <span id="lat{{place.id}}">{{ place.lat }}</span>
-            <span id="lon{{place.id}}">{{ place.lon }}</span>
+            <div>{{ place.state }} {{ place.country }}
+                <span id="lat{{place.id}}">{{ place.lat }}</span>
+                <span id="lon{{place.id}}">{{ place.lon }}</span>
+            </div>
         </div>
     </div>
     {% empty %}
-    <div>*** No places registered yet***</div>
+    <div>*** Nenhum local registrado***</div>
     {% endfor %}
 </div>
 <nav aria-label="Page navigation">
@@ -50,7 +59,7 @@
     </ul>
 
 </nav>
-
+{% endif %}
 {% block script %}
 {% if user.is_authenticated %}
 <script src="{% static 'passarinhar/favourites.js' %}"></script>

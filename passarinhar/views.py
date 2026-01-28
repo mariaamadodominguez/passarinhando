@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from .models import User, Post, Follower, Sighting, Place
+from .models import WUser, Post, Follower, Sighting, Place, Spice
 from django.core.paginator import Paginator
 from django.conf import settings
 #from django.contrib.gis.geoip2 import GeoIP2
@@ -56,17 +56,27 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
     }
 
 def allplaces(request):    
-    
+    error = None
     allplaces = Place.objects.all()
     allplaces = allplaces.order_by("-pk").all()   
-    p = Paginator(allplaces, 10)
+    p = Paginator(allplaces, 30)
     page_number = request.GET.get('page')
     page_obj = p.get_page(page_number)
+    hotspots_nearby_data = page_obj    
+    if hotspots_nearby_data:
+        home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "allplaces", hotspots_nearby_data)
+        map_html = home_map._repr_html_()    
+    else:
+        error = 'Nenhum local registrado!'
+        map_html = None
     
     return render(request, "passarinhar/places.html", {
         'title':"Locais de Avistamento Registrados",
         "page_name": 'allplaces',        
         'page_obj':page_obj,
+        "hotspots_nearby_data": hotspots_nearby_data,
+        "nearby_map":map_html,
+        "error": error
         })
             
 def addFavourite(request):
@@ -76,17 +86,16 @@ def addFavourite(request):
     fav = None
     try:
         place = Place.objects.get(pk=place_id)
-        currentUser = Follower.objects.filter(user = request.user.id)
-        currentUser = currentUser[0]
-        if place in currentUser.favourite_places.all():    
+        currentUser = WUser.objects.get(pk=request.user.id)
+        if place in currentUser.favouritesList.all():    
             fav = False
-            currentUser.favourite_places.remove(place) 
+            currentUser.favouritesList.remove(place) 
         else:
             fav = True
-            currentUser.favourite_places.add(place)                
+            currentUser.favouritesList.add(place)                
         currentUser.save()
 
-    except User.DoesNotExist:
+    except WUser.DoesNotExist:
         raise Http404("Place not found.")
 
     
@@ -96,36 +105,33 @@ def favourites(request):
     error = None
     
     # Filter places returned based on favourites:
-    user = Follower.objects.filter(user = request.user.id)    
-    fav_places = Place.objects.filter(id__in=user.values_list("favourite_places", flat=True))                    
-    
+    user = WUser.objects.filter(id = request.user.id)    
+    fav_places = Place.objects.filter(id__in=user.values_list("favouritesList", flat=True))  
+                      
     # Return all user favourite places in reverse chronologial order
     fav_places = fav_places.order_by("-pk").all()
     
-
     p = Paginator(fav_places, 30)
     page_number = request.GET.get('page')
     page_obj = p.get_page(page_number)
-
-    #return render(request, "passarinhar/places.html", {
-    #    'title':"Locais de Avistamento Favoritos",
-    #    "page_name": 'favourites',        
-    #    'page_obj':page_obj,
-    #    })    
+    
     hotspots_nearby_data = page_obj    
-    home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "favourite", hotspots_nearby_data)
-    map_html = home_map._repr_html_()                      
-    form = LocalsForm(initial={"dist":5})
-    return render(request, "passarinhar/locais.html", {
-            "title":'Locais Favoritos',
-            "form": form,
-            "error":error,
-            "hotspots_nearby_data": hotspots_nearby_data,
-            "nearby_map":map_html
-        })
-
+    if hotspots_nearby_data:
+        home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "favourite", hotspots_nearby_data)
+        map_html = home_map._repr_html_()    
+    else:
+        map_html = None
+        error = 'Nenhum local registrado como favorito!'
+    return render(request, "passarinhar/places.html", {
+        'title':"Locais de Avistamento Favoritos",
+        "page_name": 'favs',        
+        'page_obj':page_obj,
+        "hotspots_nearby_data": hotspots_nearby_data,
+        "nearby_map":map_html,
+        "error": error   
+        })                      
+    
 def hotspots_nearby_view(request):
-    print(f"hotspots_nearby_view {request.method}")
     hotspots_nearby_data = None
     error = None
     home_map = None
@@ -138,7 +144,6 @@ def hotspots_nearby_view(request):
             dist = request.POST['dist']        
             hotspots_nearby_data = fetch_hotspots_nearby(
                 latitude,longitude,dist)                        
-            print(f"hotspots_nearby {latitude},{longitude},{dist}")
             
             if len(hotspots_nearby_data['data']) == 0 :
                 error = 'Nenhum local encontrado!' 
@@ -149,7 +154,7 @@ def hotspots_nearby_view(request):
         else:  
             pass
     else:
-        form = LocalsForm(initial={"dist":5})      
+        form = LocalsForm(initial={"dist":15})      
     return render(request, "passarinhar/locais.html", {
             "title":'Locais de avistamento na região',
             "form": form,
@@ -159,7 +164,6 @@ def hotspots_nearby_view(request):
         })
 
 def show_on_map(latitude, longitude, type, hotspots_nearby):
-    
     
     if type != "hotspot":
         locName_list = [item.place for item in hotspots_nearby] 
@@ -194,7 +198,7 @@ def show_on_map(latitude, longitude, type, hotspots_nearby):
     # add places to map
     home_map.add_child(nearby_places)
     return home_map
-    
+
 def bird_of_the_day_view(request):
     try:         
         if request.headers.get('content-type') == 'application/json':      
@@ -215,7 +219,33 @@ def bird_of_the_day_view(request):
                        
     except Exception as e:
        return JsonResponse({'error': str(e)})
-            
+
+def addNewSpice(request):
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)    
+            name = data.get('name','')
+            spice_code = data.get('spice_code','')
+            scientific_name = data.get('scientific_name','')
+            description = data.get('description','')
+            url_spice_img = data.get('url_spice_img','')
+            current = Spice.objects.filter(name=name)
+            if current:
+                message = 'Passarinho já cadastrado.'                                
+            else:
+                new_spice = Spice(
+                spice_code=spice_code,
+                name=name,                
+                scientific_name=scientific_name,
+                description=description,
+                url_spice_img=url_spice_img
+                )
+                new_spice.save()
+                message = f'Passarinho {name} cadastrado com sucesso.'                        
+            return JsonResponse({'message': message})
+    except Exception as e:
+       return JsonResponse({'message': str(e)})
+
 def addNewLocal(request):
     if request.method == 'POST':
         data = json.loads(request.body)    
@@ -231,10 +261,14 @@ def addNewLocal(request):
             latestObsDt = data.get('latestObsDt','')
             numSpeciesAllTime = data.get('numSpeciesAllTime','')
                
+            country= subnational2Code.split('-')[0]
+            region = subnational2Code.split('-')[1]
             new_local = Place(
                 place=place,
                 lat=lat,
                 lon=lon,
+                country=country,
+                region=region,
                 subnational2Code=subnational2Code,
                 locId=locId,
                 latestObsDt=latestObsDt,
@@ -242,6 +276,10 @@ def addNewLocal(request):
             )
             new_local.save()    
             message = 'Local salvo com sucesso..'
+            # add to favouriteslist
+            currentUser = request.user
+            currentUser.favouritesList.add(new_local)                
+            currentUser.save()
     return JsonResponse({
         "message": message})
 
@@ -280,7 +318,7 @@ def recent_observations_view(request):
             if len(recent_observations_data['data']) == 0 :
                 error = 'Nenhuma observação recente encontrada!'           
     else:  
-        form = RecentsForm(initial={"quantos":5})      
+        form = RecentsForm(initial={"quantos":15})      
     return render(request, "passarinhar/recentes.html", {
             "title":'Avistamentos recentes na região',
             "form": form,
@@ -338,7 +376,6 @@ def foro(request):
     })
                         
 def following(request):    
-    
     # Filter post returned based on following":
     authors = Follower.objects.filter(user = request.user)
     posts = Post.objects.filter(author__in=authors.values_list("following", flat=True))                
@@ -396,7 +433,7 @@ def register(request):
 
         # Attempt to create new user
         try:
-            user = User.objects.create_user(username, email, password)
+            user = WUser.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
             return render(request, "passarinhar/register.html", {
@@ -410,8 +447,8 @@ def register(request):
 def profile(request, username):
 
     try:
-        profile = User.objects.get(username=username)
-    except User.DoesNotExist:
+        profile = WUser.objects.get(username=username)
+    except WUser.DoesNotExist:
         raise Http404("Usuário não encontrado.")
     
     #Display the number of followers the user has, as well as 
@@ -460,7 +497,7 @@ def addRemoveFollowing(request):
     data = json.loads(request.body)        
     if request.method == "POST":
         try:                        
-            following_user = User.objects.get(username=data.get('following_user_name',''))
+            following_user = WUser.objects.get(username=data.get('following_user_name',''))
         except KeyError:
             return JsonResponse({"error": "Requisição inválida: Usuário não encontrado."}, status=404)
         try:            

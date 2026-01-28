@@ -14,63 +14,43 @@
 
 <body>
     <nav class="container navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand">Passarinhar</a>
+        <a class="navbar-brand" href="{% url 'passarinhar:index' %}">Passarinhar</a>
         <div>
             <ul class="navbar-nav mr-auto">
-                {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" id="user" href="{% url 'passarinhar:profile' user.username %}"><strong>
-                            {{user.username }}</strong></a>
-                </li>            
-                <li class="nav-item">
-                    <a id="my-sights" class="nav-link" href="{% url 'passarinhar:mysightings' %}">Meus avistamentos</a>
-                </li>                        
-                <li class="nav-item">
-                    <a id="my-places" class="nav-link" href="{% url 'passarinhar:favourites' %}">Meus locais favoritos</a>
-                </li>                        
-                
-                {% endif %}
-                <li class="nav-item">
-                    <a id="allpost" class="nav-link" href="{% url 'passarinhar:index' %}">Passarinho do Dia</a>
+                <li class="nav-item"><a class="nav-link" id="ebird-sights"
+                        href="{% url 'passarinhar:recents'%}">Avistamentos - eBird</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="geo-link" href="{% url 'passarinhar:recents'%}">Avistamentos nas redondezas - eBird</a>
+                <li class="nav-item"><a class="nav-link" id="ebird-places" href="{% url 'passarinhar:locals'%}">Locais -
+                        eBird</a>
                 </li>
-                        
-                <li class="nav-item">
-                    <a class="nav-link" id="geo-link" href="{% url 'passarinhar:locals'%}">Locais nas redondezas  - eBird</a>
-                </li>
-                <li class="nav-item">
-                    <a id="all-sights" class="nav-link" href="{% url 'passarinhar:allsightings' %}">Avistamentos registrados</a>
-                </li>
-                <li class="nav-item">
-                    <a id="all-sights" class="nav-link" href="{% url 'passarinhar:allplaces' %}">Locais registrados</a>
-                </li>
-                
-                
-                <li class="nav-item">
-                    <a id="allpost" class="nav-link" href="{% url 'passarinhar:foro' %}">Foro</a>
+                <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a>
                 </li>
                 {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a id="following" class="nav-link" href="{% url 'passarinhar:following' %}">Seguindo</a>
+                <li class="nav-item"><a class="nav-link" id="all-sights"
+                        href="{% url 'passarinhar:allsightings' %}">Avistamentos registrados</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a>
+                <li class="nav-item"><a class="nav-link" id="all-places" href="{% url 'passarinhar:allplaces' %}">Locais
+                        registrados</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" id="user"
+                        href="{% url 'passarinhar:profile' user.username %}"><strong>{{user.username }}</strong></a>
+                </li>
+                <li class="nav-item"><a class="nav-link" id="following"
+                        href="{% url 'passarinhar:following' %}">Seguindo</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a>
                 </li>
                 {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'passarinhar:register' %}">Cadastrar</a>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:register' %}">Cadastrar</a>
                 </li>
                 {% endif %}
             </ul>
         </div>
     </nav>
 
-    <div class="container body">         
+    <div class="container body">
         {% block body %}
         {% endblock %}
     </div>
