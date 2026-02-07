@@ -54,3 +54,18 @@ Ex: print(dados_info['query']['pages']['-1']['imageinfo'][0]['url'])
 }  
 }  
 }  
+
+pip install django-thumbnails
+from thumbnails.fields import ImageField
+
+class spice(models.Model):
+    ...
+    image = ImageField(upload_to='spice_images/', pregenerated_sizes=["small", "medium"])
+
+https://datazone.birdlife.org/search
+Important Bird and Biodiversity Areas (IBAs) and Key Biodiversity Areas (KBAs) are sites identified as being internationally significant for the conservation of birds and other biodiversity, based on a set of standardised, data-driven criteria.
+
+https://datazone.birdlife.org/site/factsheet/20213-regi%C3%A3o-serrana-do-rio-de-janeiro
+https://datazone.birdlife.org/species/factsheet/giant-antshrike-batara-cinerea#Taxonomy
+https://birdsoftheworld.org/bow/species/giaant2/cur/introduction?login
+https://icons.getbootstrap.com/

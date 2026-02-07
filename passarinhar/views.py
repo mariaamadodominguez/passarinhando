@@ -1,18 +1,21 @@
 # Create your views here.
-from dbm import error
-import json
+from django.core.files import File
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from .models import WUser, Post, Follower, Sighting, Place, Spice
 from django.core.paginator import Paginator
+from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
-#from django.contrib.gis.geoip2 import GeoIP2
+from dbm import error
 from .forms import CommentForm, RecentsForm, LocalsForm
-import requests
+from .models import WUser, Post, Follower, Sighting, Place, Spice, DataZoneSpecie
 import folium
+import json
+import os
+import requests
+import urllib.request
 
 def fetch_hotspots_nearby(lat, lon, dist = 25):
     api_key = settings.EBIRD_API_KEY
@@ -79,6 +82,29 @@ def allplaces(request):
         "error": error
         })
             
+def allspices(request):    
+    error = None
+    page_obj = None
+    allspices = Spice.objects.all()
+    allspices = allspices.order_by("-pk").all()      
+    if allspices:       
+        p = Paginator(allspices, 30)
+        page_number = request.GET.get('page')
+        page_obj = p.get_page(page_number)
+        RL_Category = allspices[0].DTScientific_name.RL_Category
+        print(RL_Category)
+        print(f"allspices[0]: {allspices[0].image.thumbnails.small.url}")
+    else:
+        error = 'Sem dados'
+        page_obj = None
+    
+    return render(request, "passarinhar/spices.html", {
+        'title':"Especies Registradas",
+        'spices': allspices,
+        'page_obj':page_obj,
+        "error": error
+        })
+
 def addFavourite(request):
     
     data = json.loads(request.body)    
@@ -220,31 +246,68 @@ def bird_of_the_day_view(request):
     except Exception as e:
        return JsonResponse({'error': str(e)})
 
+def save_img(name, url_spice_img):      
+    try:    
+        
+        img_temp = NamedTemporaryFile(delete=True)
+        req = urllib.request.Request(url_spice_img, headers={'User-Agent': 'MyPythonScript/1.0 (maria.amado.d@gmail.com)'})
+        with urllib.request.urlopen(req) as response:
+            img_temp.write(response.read())
+        print (f'Imagem url {url_spice_img}')                              
+        img_temp.flush()     
+                             
+        # Create a model instance and save the image        
+        instance = Spice.objects.filter(name=name)
+        if instance is None:
+            print({"error": "Record not found."}, status=404)
+        else:
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'spice_images/')
+            if not os.path.exists(upload_dir):
+                print('making os.path({upload_dir})')
+                os.makedirs(upload_dir, exist_ok=True)
+            instance[0].image.save(f"remote_{name}.jpg", File(img_temp), save=True)                               
+        print (f'Image remote_{name}.jpg saved')
+    except Exception as e:
+       print ({'error': str(e)})
+
 def addNewSpice(request):
     try:
         if request.method == 'POST':
             data = json.loads(request.body)    
-            name = data.get('name','')
-            spice_code = data.get('spice_code','')
+            name = data.get('name','')            
             scientific_name = data.get('scientific_name','')
-            description = data.get('description','')
-            url_spice_img = data.get('url_spice_img','')
+            spice_code = data.get('spice_code','')                
+            description = data.get('description','')                                 
+            url_spice_img = data.get('url_spice_img','')   
+
             current = Spice.objects.filter(name=name)
             if current:
                 message = 'Passarinho já cadastrado.'                                
             else:
+                DZS_name=scientific_name[:20]
+                try:
+                    spice = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
+                except DataZoneSpecie.DoesNotExist:
+                    # Handle the case where the object doesn't exist
+                    spice = None
+
                 new_spice = Spice(
                 spice_code=spice_code,
                 name=name,                
                 scientific_name=scientific_name,
+                DTScientific_name = spice,
                 description=description,
                 url_spice_img=url_spice_img
                 )
                 new_spice.save()
                 message = f'Passarinho {name} cadastrado com sucesso.'                        
-            return JsonResponse({'message': message})
+                
+                save_img(name, url_spice_img)
     except Exception as e:
-       return JsonResponse({'message': str(e)})
+        return JsonResponse({'error': str(e)})  
+
+    return JsonResponse({'message': message})
+    
 
 def addNewLocal(request):
     if request.method == 'POST':
@@ -280,8 +343,8 @@ def addNewLocal(request):
             currentUser = request.user
             currentUser.favouritesList.add(new_local)                
             currentUser.save()
-    return JsonResponse({
-        "message": message})
+            
+    return JsonResponse({"message": message})
 
 def localrecents(request, lat, lon):
     recent_observations_data = None

@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
     <link href="{% static 'passarinhar/styles.css' %}" rel="stylesheet">
     <link rel="shortcut icon" href="#">
 </head>
@@ -18,33 +20,26 @@
         <div>
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item"><a class="nav-link" id="ebird-sights"
-                        href="{% url 'passarinhar:recents'%}">Avistamentos - eBird</a>
-                </li>
+                        href="{% url 'passarinhar:recents'%}">Avistamentos - eBird</a></li>
                 <li class="nav-item"><a class="nav-link" id="ebird-places" href="{% url 'passarinhar:locals'%}">Locais -
-                        eBird</a>
-                </li>
-                <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a>
-                </li>
+                        eBird</a></li>
+                <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a></li>
+                <li class="nav-item"><a class="nav-link" id="all-spices"
+                        href="{% url 'passarinhar:allspices' %}">Especies registradas</a></li>
                 {% if user.is_authenticated %}
                 <li class="nav-item"><a class="nav-link" id="all-sights"
-                        href="{% url 'passarinhar:allsightings' %}">Avistamentos registrados</a>
-                </li>
+                        href="{% url 'passarinhar:allsightings' %}">Avistamentos registrados</a></li>
                 <li class="nav-item"><a class="nav-link" id="all-places" href="{% url 'passarinhar:allplaces' %}">Locais
-                        registrados</a>
-                </li>
+                        registrados</a></li>
                 <li class="nav-item"><a class="nav-link" id="user"
                         href="{% url 'passarinhar:profile' user.username %}"><strong>{{user.username }}</strong></a>
                 </li>
                 <li class="nav-item"><a class="nav-link" id="following"
-                        href="{% url 'passarinhar:following' %}">Seguindo</a>
-                </li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a>
-                </li>
+                        href="{% url 'passarinhar:following' %}">Seguindo</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a></li>
                 {% else %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a>
-                </li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:register' %}">Cadastrar</a>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:register' %">Cadastrar</a></li>
                 {% endif %}
             </ul>
         </div>

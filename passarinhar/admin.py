@@ -1,14 +1,18 @@
 from django.contrib import admin
-class PostAdmin(admin.ModelAdmin):
-    list_display = ("id","author","post_content", "timestamp","updated_at")
-class FollowerAdmin(admin.ModelAdmin):
-    list_display = ("id","user", "following_count")    
-from .models import Spice, Sighting, Place, WUser, Follower, Post, Comment
+class SpiceAdmin(admin.ModelAdmin):
+    list_display = ("name", "spice_code")    
+class PlaceAdmin(admin.ModelAdmin):
+    list_display = ("place", "subnational2Code", "country", "lat", "lon")
+class DataZoneSpecieAdmin(admin.ModelAdmin):    
+    list_display = ("SIS_ID", "Sequence", "Family", "Scientific_name", "Common_name")
+
+from .models import Spice, Sighting, Place, WUser, Follower, Post, Comment, DataZoneSpecie
 
 admin.site.register(WUser)
-admin.site.register(Follower, FollowerAdmin)
-admin.site.register(Post, PostAdmin)
+admin.site.register(Follower)
+admin.site.register(Post)
 admin.site.register(Comment)
-admin.site.register(Place)
-admin.site.register(Spice)
+admin.site.register(Place, PlaceAdmin)
+admin.site.register(Spice, SpiceAdmin)
 admin.site.register(Sighting)
+admin.site.register(DataZoneSpecie, DataZoneSpecieAdmin)

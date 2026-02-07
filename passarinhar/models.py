@@ -1,5 +1,5 @@
 from django.db import models
-
+from thumbnails.fields import ImageField
 # Create your models here.
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -84,15 +84,57 @@ class Comment(models.Model):
     def serialize(self):
         return f" Comment  {self.post} (by {self.author.username})"    
 
-
+class DataZoneSpecie(models.Model):
+    SIS_ID  = models.CharField(max_length=20, blank=True)
+    Sequence = models.CharField(max_length=20, blank=True)
+    Family = models.CharField(max_length=20, blank=True)
+    Scientific_name = models.CharField(max_length=20, blank=True)
+    Common_name = models.CharField(max_length=20, blank=True)
+    RL_Category = models.CharField(max_length=20, blank=True)
+    PE = models.CharField(max_length=20, blank=True)
+    PEW = models.CharField(max_length=20, blank=True)
+    Seabird = models.CharField(max_length=20, blank=True)
+    Waterbird = models.CharField(max_length=20, blank=True)
+    Landbird = models.CharField(max_length=20, blank=True)
+    Migratory_status = models.CharField(max_length=20, blank=True)
+    Ecosystem_Terrestrial = models.CharField(max_length=20, blank=True)
+    Ecosystem_Freshwater = models.CharField(max_length=20, blank=True)
+    Ecosystem_Marine = models.CharField(max_length=20, blank=True)
+    RL_AOO = models.CharField(max_length=20, blank=True)
+    Criteria_met_at_highest_level = models.CharField(max_length=20, blank=True) 
+    RL_EOO = models.CharField(max_length=20, blank=True)
+    Population_size = models.CharField(max_length=20, blank=True) 
+    Population_size_derivation = models.CharField(max_length=20, blank=True)
+    Current_population_trend = models.CharField(max_length=20, blank=True) 
+    Current_population_trend_derivation = models.CharField(max_length=20, blank=True)
+    def __str__(self):
+        return self.Scientific_name
 class Spice(models.Model):
     name = models.CharField(max_length=64, unique=True)
     spice_code = models.CharField(max_length=20, null=True, blank=True)    
     scientific_name = models.CharField(max_length=64, null=True, blank=True)
+    DTScientific_name = models.ForeignKey(DataZoneSpecie, on_delete=models.CASCADE,null=True, blank=True, related_name="spice") 
     description = models.TextField(blank=True)
     url_spice_img  = models.URLField(blank=True)
-    def __str__(self) -> str:
+    image = ImageField(upload_to='spice_images/', pregenerated_sizes=["small", "medium"], null=True)
+    
+    @property
+    def imageURL(self):
+        try:
+            url = self.image.url
+        except:
+            url = ""
+        return url
+    def __str__(self) -> str:        
         return f"{self.name} - {self.scientific_name}"   
+    def serialize(self):
+        return {
+            "name": self.name,
+            "spice": self.name,
+            "family": self.DTScientific_name.Family,
+            "RL_Category": self.DTScientific_name.RL_Category,
+        } 
+
     
 class Sighting(models.Model):
     birder = models.ForeignKey(WUser, on_delete=models.CASCADE, related_name="owner")
@@ -103,5 +145,14 @@ class Sighting(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE, blank=True,  null=True, related_name="sighting_place")    
     date_created = models.DateField(auto_now_add=True)
     def __str__(self) -> str:
-        return f"{self.common_name} - {self.description}"            
-
+        return f"{self.common_name} - {self.description}"      
+    def serialize(self):
+        return {
+            "birder": self.birder.username,
+            "common_name": self.common_name,
+            "description": self.description,
+            "url_img": self.url_img,
+            "spice": self.spice.name,
+            "place": self.place.place,
+            "date_created": self.date_created.strftime("%b %d %Y, %I:%M %p"),
+        }         

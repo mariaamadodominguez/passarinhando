@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-  #  'django.contrib.gis',
+    'thumbnails', 
     'passarinhar'
 ]
 
@@ -70,7 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            ],
+            ],            
         },
     },
 ]
@@ -133,4 +133,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 
 AUTH_USER_MODEL = "passarinhar.WUser"
 
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
+THUMBNAILS = {
+    'METADATA': {
+        'PREFIX': 'thumbs',
+        'BACKEND': 'thumbnails.backends.metadata.DatabaseBackend',
+    },
+    'STORAGE': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'SIZES': {
+        'small': {
+            'PROCESSORS': [
+                {'PATH': 'thumbnails.processors.resize', 'width': 100, 'height': 100},
+                {'PATH': 'thumbnails.processors.crop', 'width': 100, 'height': 100},
+            ],
+           
+        },
+    }
+}

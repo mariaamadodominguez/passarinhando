@@ -1,7 +1,5 @@
 from django.urls import path
 
-from passarinhar import admin
-
 from . import views
 app_name = "passarinhar"  
 urlpatterns = [
@@ -18,7 +16,7 @@ urlpatterns = [
     path("allsightings", views.allsightings, name="allsightings"),
     path("favourites", views.favourites, name="favourites"),
     path("allplaces", views.allplaces, name="allplaces"),
-    
+    path("allspices", views.allspices, name="allspices"),
     path("<str:lat>/<str:lon>/localrecents", views.localrecents, name="localrecents"),
     path("sighting/<int:sighting_id>", views.sighting, name="sighting"),
 
