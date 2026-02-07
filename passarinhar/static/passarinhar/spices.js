@@ -4,6 +4,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(_btn.id).addEventListener('click', () =>
             showDetails(_btn.id));
     })
+    var yesno_collection = Array.from(document.getElementsByClassName('yes-no'));
+    yesno_collection.forEach(_yesno => {
+        console.log(_yesno.id, document.getElementById(_yesno.id).innerHTML)
+        if (document.getElementById(_yesno.id).innerHTML == 'TRUE') {
+            document.getElementById(_yesno.id).innerHTML = 'SIM'
+            document.getElementById(_yesno.id).classList.add("badge-info")
+        } else {
+            document.getElementById(_yesno.id).innerHTML = 'NÃO'
+            document.getElementById(_yesno.id).classList.add("badge-danger")
+        }
+    })
 
 
     function showDetails(spice_id) {
@@ -21,17 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector(parentselector).style.display = 'none';
             // console.log(rlcat, document.querySelector(rlcat).innerHTML)
             getRLCategory(document.querySelector(rlcat));
-            var yesno_collection = Array.from(document.getElementsByClassName('yes-no'));
-            yesno_collection.forEach(_yesno => {
-                console.log(_yesno.id)
-                if (document.getElementById(_yesno.id).innerHTML == 'TRUE') {
-                    document.getElementById(_yesno.id).innerHTML = 'SIM'
-                    document.getElementById(_yesno.id).classList.add("badge-info")
-                } else {
-                    document.getElementById(_yesno.id).innerHTML = 'NÃO'
-                    document.getElementById(_yesno.id).classList.add("badge-danger")
-                }
-            })
+
         }
     }
 }

@@ -33,7 +33,7 @@
         <h3 id="name{{ forloop.counter0 }}">{{ recent_observation.comName }}</h3>
         {% if user.is_authenticated %}
         {% csrf_token %}
-        <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar especie</button>
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar especie</button>
         {% endif %}
         <ul>
             <li>Nome científico: <span id="sciName{{ forloop.counter0 }}">{{ recent_observation.sciName }}</span></li>

@@ -91,8 +91,11 @@ def allspices(request):
         p = Paginator(allspices, 30)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
-        RL_Category = allspices[0].DTScientific_name.RL_Category
-        print(RL_Category)
+        if allspices[0].DTScientific_name:
+            RL_Category = allspices[0].DTScientific_name.RL_Category
+            print(RL_Category)
+        else:
+            RL_Category = 'N/A'
         print(f"allspices[0]: {allspices[0].image.thumbnails.small.url}")
     else:
         error = 'Sem dados'
