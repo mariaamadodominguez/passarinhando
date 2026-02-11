@@ -6,20 +6,26 @@
 
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 
-<div id="current" class="" style="padding-left:10px">
+<div id="current" class="row">
     {% csrf_token %}
-    <div id="bird-of-the-day" class="p-1 my-1 bg-white text-dark border border-secondary">
-        <h3 id="common-name"></h3>
-        <ul>
-            <li id="sci-name"></li>
-            <li id="spiceCode"></li>
-            <li id="obs-date"></li>
-            <li id="loc-name"></li>
-            <div class="p-5">
-                <img id="bird-img" src="#" alt="com_name wiki image">
-            </div>
+    <div class="col-4" id="bird-of-the-day">
+        <h3 id="common-name" class="text-capitalize"></h3>
+        <img class="img-responsive" id="bird-img" src="#" alt="com_name wiki image">
+        <ul class="p-1 my-1">
+            <li>Nome cientifico: <span class="text-capitalize" id="sci-name"></span></li>
+            <li>Código da espécie (eBird): <span class="text-capitalize" id="spiceCode"></span></li>
+            <li>Estado de Conservação: <span id="spice-rl" class="badge">LC</span></li>
+            <li>Observação: <span class="text-capitalize" id="loc-name"></span> em <span id="obs-date"></span></li>
         </ul>
     </div>
+
+    <div class="col-8" id="debossan">
+        <!--a
+            href="https://datazone.birdlife.org/search?cameraPosition=-43.49999349574768,-22.787594405218314,-41.44229306230019,-21.973820333629448&sitesEnabled=true&protectedAreasEnabled=false&limitSites=false&isSiteMap=true&site=20213">
+            Região Serrana do rio de janeiro - Areas protegidas</a-->
+        {{ debossan_map|safe }}
+    </div>
+
 </div>
 
 {% block script %}

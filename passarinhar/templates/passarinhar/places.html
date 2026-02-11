@@ -17,24 +17,28 @@
     {% for place in page_obj %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <div id="place{{place.id}}">
-            <h3>{{ place.place }}</h3>
-            {% if user.is_authenticated %}
-            {% csrf_token %}
-            <span id="fav-btn{{place.id}}" class="fav-button" data-id="{{place.id}}">
-                {% if place in user.favouritesList.all %}
-                <i id="fav-icon{{place.id}}" style="color:red" class="fa fa-heart" data-id="{{place.id}}"></i>
-                {% else %}
-                <i id="fav-icon{{place.id}}" style="color:grey" class="fa fa-heart" data-id="{{place.id}}"></i>
+            <h3>{{ place.place }}
+                {% if user.is_authenticated %}
+                {% csrf_token %}
+                <span id="fav-btn{{place.id}}" class="fav-button" data-id="{{place.id}}">
+                    {% if place in user.favouritesList.all %}
+                    <i id="fav-icon{{place.id}}" style="color:red" class="fa fa-heart" data-id="{{place.id}}"></i>
+                    {% else %}
+                    <i id="fav-icon{{place.id}}" style="color:grey" class="fa fa-heart" data-id="{{place.id}}"></i>
+                    {% endif %}
+                </span>
                 {% endif %}
-            </span>
-            {% endif %}
-            <div id="recent-obs{{place.id}}">
-                <a href="{% url 'passarinhar:localrecents' place.lat place.lon %}">Avistamentos recentes</a>
-            </div>
-            <div>{{ place.state }} {{ place.country }}
+            </h3>
+            <div>{{ place.region }} {{ place.country }}
                 <span id="lat{{place.id}}">{{ place.lat }}</span>
                 <span id="lon{{place.id}}">{{ place.lon }}</span>
             </div>
+            <span>Última Observação: {{place.latestObsDt}}</span>
+            <span>Total Especies: {{place.numSpeciesAllTime}}</span>
+            <div id="recent-obs{{place.id}}">
+                <a href="{% url 'passarinhar:localrecents' place.lat place.lon %}">Avistamentos recentes</a>
+            </div>
+
         </div>
     </div>
     {% empty %}

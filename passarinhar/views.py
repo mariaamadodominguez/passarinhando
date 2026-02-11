@@ -1,5 +1,6 @@
 # Create your views here.
 from django.core.files import File
+from django.core import serializers
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import Http404, HttpResponseRedirect, JsonResponse
@@ -8,6 +9,7 @@ from django.urls import reverse
 from django.core.paginator import Paginator
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
+
 from dbm import error
 from .forms import CommentForm, RecentsForm, LocalsForm
 from .models import WUser, Post, Follower, Sighting, Place, Spice, DataZoneSpecie
@@ -51,7 +53,7 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
       'X-eBirdApiToken': api_key
     }    
     response = requests.request("GET", url, headers=headers, data=payload)    
-    # print(api_key, response.text)
+    print(api_key, response.text)
     
     data = response.json()
     return {
@@ -61,17 +63,18 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany = 1):
 def allplaces(request):    
     error = None
     allplaces = Place.objects.all()
-    allplaces = allplaces.order_by("-pk").all()   
-    p = Paginator(allplaces, 30)
-    page_number = request.GET.get('page')
-    page_obj = p.get_page(page_number)
-    hotspots_nearby_data = page_obj    
-    if hotspots_nearby_data:
+    if allplaces:
+        allplaces = allplaces.order_by("-pk").all()   
+        p = Paginator(allplaces, 30)
+        page_number = request.GET.get('page')
+        page_obj = p.get_page(page_number)
+        hotspots_nearby_data = page_obj    
         home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "allplaces", hotspots_nearby_data)
         map_html = home_map._repr_html_()    
     else:
         error = 'Nenhum local registrado!'
         map_html = None
+        page_obj = None
     
     return render(request, "passarinhar/places.html", {
         'title':"Locais de Avistamento Registrados",
@@ -90,13 +93,7 @@ def allspices(request):
     if allspices:       
         p = Paginator(allspices, 30)
         page_number = request.GET.get('page')
-        page_obj = p.get_page(page_number)
-        if allspices[0].DTScientific_name:
-            RL_Category = allspices[0].DTScientific_name.RL_Category
-            print(RL_Category)
-        else:
-            RL_Category = 'N/A'
-        print(f"allspices[0]: {allspices[0].image.thumbnails.small.url}")
+        page_obj = p.get_page(page_number)        
     else:
         error = 'Sem dados'
         page_obj = None
@@ -126,7 +123,6 @@ def addFavourite(request):
 
     except WUser.DoesNotExist:
         raise Http404("Place not found.")
-
     
     return JsonResponse({"userFav": fav})        
           
@@ -139,18 +135,19 @@ def favourites(request):
                       
     # Return all user favourite places in reverse chronologial order
     fav_places = fav_places.order_by("-pk").all()
+    if fav_places:    
+        p = Paginator(fav_places, 30)
+        page_number = request.GET.get('page')
+        page_obj = p.get_page(page_number)
     
-    p = Paginator(fav_places, 30)
-    page_number = request.GET.get('page')
-    page_obj = p.get_page(page_number)
-    
-    hotspots_nearby_data = page_obj    
-    if hotspots_nearby_data:
+        hotspots_nearby_data = page_obj        
         home_map = show_on_map(hotspots_nearby_data[0].lat, hotspots_nearby_data[0].lon, "favourite", hotspots_nearby_data)
         map_html = home_map._repr_html_()    
     else:
         map_html = None
+        page_obj = None
         error = 'Nenhum local registrado como favorito!'
+
     return render(request, "passarinhar/places.html", {
         'title':"Locais de Avistamento Favoritos",
         "page_name": 'favs',        
@@ -171,9 +168,7 @@ def hotspots_nearby_view(request):
             latitude = request.POST["lat"]
             longitude = request.POST["lon"]
             dist = request.POST['dist']        
-            hotspots_nearby_data = fetch_hotspots_nearby(
-                latitude,longitude,dist)                        
-            
+            hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                    
             if len(hotspots_nearby_data['data']) == 0 :
                 error = 'Nenhum local encontrado!' 
             else:
@@ -184,6 +179,7 @@ def hotspots_nearby_view(request):
             pass
     else:
         form = LocalsForm(initial={"dist":15})      
+
     return render(request, "passarinhar/locais.html", {
             "title":'Locais de avistamento na região',
             "form": form,
@@ -192,23 +188,24 @@ def hotspots_nearby_view(request):
             "nearby_map":map_html
         })
 
-def show_on_map(latitude, longitude, type, hotspots_nearby):
+def show_on_map(latitude, longitude, type, hotspots_nearby, zoom_start=12):
     
-    if type != "hotspot":
+    if type == "favourite" or type == "allplaces":
         locName_list = [item.place for item in hotspots_nearby] 
         lng_list = [item.lon for item in hotspots_nearby]
         lat_list = [item.lat for item in hotspots_nearby]
-    else:
+    else:       
         lng_list = [item['lng'] for item in hotspots_nearby]
         lat_list = [item['lat'] for item in hotspots_nearby]
-        locName_list = [item['locName'] for item in hotspots_nearby] 
+        if type == 'bird':
+            locName_list = [item['comName'] for item in hotspots_nearby] 
+        else: 
+            locName_list = [item['locName'] for item in hotspots_nearby] 
+        
+    home_map = folium.Map(location=[latitude, longitude], zoom_start=zoom_start)
     
-    home_map = folium.Map(location=[latitude, longitude], zoom_start=12)
-    
-    # instantiate a feature group for the nearby stations in the dataframe
+   # instantiate a feature group for the nearby stations in the dataframe
     nearby_places = folium.map.FeatureGroup()
-
-    # loop through the 20 stations nearby and add each to the feature group
     for lat, lng, in zip(lat_list, lng_list):
         nearby_places.add_child(
             folium.features.CircleMarker(
@@ -222,6 +219,7 @@ def show_on_map(latitude, longitude, type, hotspots_nearby):
         )
     # add pop-up text to each marker on the map
     folium.Marker([latitude, longitude], popup="Sua localização").add_to(home_map)
+    
     for lat, lng, label in zip(lat_list, lng_list, locName_list):
         folium.Marker([lat, lng], popup=label).add_to(home_map)
     # add places to map
@@ -240,12 +238,33 @@ def bird_of_the_day_view(request):
                 longitude,
                 howmany
             ) 
-            if len(recent_observations_data['data']) > 0 :            
+            if len(recent_observations_data['data']) > 0 :     
+                # print(recent_observations_data['data'][0]['comName'])
+                latlng = recent_observations_data['data']   
+                # print(f'latlng{latlng}')                                             
+                DZS_name=recent_observations_data['data'][0]['sciName']
+                try:
+                    bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)
+                    #bird_data = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
+                    print({f"bird_data:  {bird_data}"})
+                    #bird = [bird for bird in bird_data] # Or use list(queryset)
+                    bird = serializers.serialize('json', bird_data)
+                    print({f"bird:  {bird}"})
+                except DataZoneSpecie.DoesNotExist:
+                    # Handle the case where the object doesn't exist                    
+                    print({f"error": "Record {comName} not found."}, status=404)
+                    bird = None                                    
+                    
+                home_map = show_on_map(latitude, longitude, "bird", latlng, zoom_start = 10)
+                map_html = home_map._repr_html_() 
                 return JsonResponse({
-                    'data': recent_observations_data['data']})        
-        else:
-            return JsonResponse({'error': 'Nenhum passaro encontrado!'})
-                       
+                    'data': recent_observations_data['data'],
+                    'debossan_map': map_html,
+                    'bird':bird
+                    }, content_type='application/json') 
+            else:
+                return JsonResponse({'error': 'Nenhum passaro encontrado!'})
+                               
     except Exception as e:
        return JsonResponse({'error': str(e)})
 
@@ -256,20 +275,20 @@ def save_img(name, url_spice_img):
         req = urllib.request.Request(url_spice_img, headers={'User-Agent': 'MyPythonScript/1.0 (maria.amado.d@gmail.com)'})
         with urllib.request.urlopen(req) as response:
             img_temp.write(response.read())
-        print (f'Imagem url {url_spice_img}')                              
+        # print (f'Imagem url {url_spice_img}')                              
         img_temp.flush()     
                              
         # Create a model instance and save the image        
         instance = Spice.objects.filter(name=name)
         if instance is None:
-            print({"error": "Record not found."}, status=404)
+            print({f"error": "Record {name} not found."}, status=404)
         else:
             upload_dir = os.path.join(settings.MEDIA_ROOT, 'spice_images/')
             if not os.path.exists(upload_dir):
                 print('making os.path({upload_dir})')
                 os.makedirs(upload_dir, exist_ok=True)
             instance[0].image.save(f"remote_{name}.jpg", File(img_temp), save=True)                               
-        print (f'Image remote_{name}.jpg saved')
+        # print (f'Image remote_{name}.jpg saved')
     except Exception as e:
        print ({'error': str(e)})
 
@@ -287,7 +306,8 @@ def addNewSpice(request):
             if current:
                 message = 'Passarinho já cadastrado.'                                
             else:
-                DZS_name=scientific_name[:20]
+                # DZS_name=scientific_name[:20]
+                DZS_name=scientific_name
                 try:
                     spice = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
                 except DataZoneSpecie.DoesNotExist:
@@ -303,9 +323,9 @@ def addNewSpice(request):
                 url_spice_img=url_spice_img
                 )
                 new_spice.save()
-                message = f'Passarinho {name} cadastrado com sucesso.'                        
-                
+                message = f'Passarinho {name} cadastrado com sucesso.'                                        
                 save_img(name, url_spice_img)
+
     except Exception as e:
         return JsonResponse({'error': str(e)})  
 
@@ -391,6 +411,7 @@ def recent_observations_view(request):
             "error":error,
             "recent_observations_data": recent_observations_data
                   })
+
 def mysightings(request):      
     mysightings = Sighting.objects.filter(birder=request.user)
     print(request.user, mysightings)
@@ -478,11 +499,9 @@ def login_view(request):
     else:
         return render(request, "passarinhar/login.html")
 
-
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("passarinhar:index"))
-
 
 def register(request):
     if request.method == "POST":
@@ -592,7 +611,6 @@ def addRemoveFollowing(request):
         "followers": followers,
         "action":action})      
     
-
 def updPostContent(request):
     # For a post request, update the post content     
     data = json.loads(request.body)    
@@ -624,4 +642,3 @@ def addNewLike(request):
     return JsonResponse({
         "likes": currentPost.likes_count,
         "userlike": like})        
-

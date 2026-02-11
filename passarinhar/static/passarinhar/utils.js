@@ -87,3 +87,44 @@ export const getCurrentLocation = async () => {
         // Handle the error appropriately in your UI
     }
 }
+
+export const getRLCategory = (rlcat) => {
+    var rl = rlcat.innerHTML
+    let RL_CATEGORY;
+    console.log('selector', rlcat, 'inner', rl.trim())
+    switch (rl.trim()) {
+        case 'EX':
+            RL_CATEGORY = 'Extincto';
+            rlcat.style = "color:red"
+        case 'EW':
+            RL_CATEGORY = 'Extincto na Natureza'
+            rlcat.classList.add('badge-danger');
+        case 'CR':
+            RL_CATEGORY = "Peligro Crítico";
+            rlcat.classList.add('badge-danger');
+            break;
+        case 'EN':
+            RL_CATEGORY = "Peligro";
+            rlcat.classList.add("badge-warning")
+            break;
+        case 'VU':
+            RL_CATEGORY = "Vulnerável";
+            rlcat.classList.add("badge-warning")
+            break;
+        case 'NT':
+            RL_CATEGORY = "Quase ameaçado";
+            rlcat.classList.add("badge-warning")
+            break;
+        case 'LC':
+            RL_CATEGORY = "Pouco preocupante";
+            rlcat.classList.add("badge-info")
+            break;
+        case 'DD':
+        default:
+            RL_CATEGORY = "Sem dados";
+            rlcat.classList.add("badge-dark")
+            break;
+    }
+    rlcat.innerHTML = RL_CATEGORY
+    return;
+} 
