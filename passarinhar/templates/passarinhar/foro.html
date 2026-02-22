@@ -30,7 +30,9 @@
         <li><a id="my-places" href="{% url 'passarinhar:favourites' %}">Meus locais favoritos</a></li>
         {% endif %}
         <li id="prf-followers">Seguidores: {{ followers }}</li>
-        <li id="prf-following">Seguindo a: {{ following }}</li>
+        <li id="prf-following">Seguindo a: {{ following}}<a id="following" href="{% url 'passarinhar:following' %}"> Ver
+                Postagens</a>
+        </li>
     </ul>
     {% if user.is_authenticated and user != profile_obj %}
     <script src="{% static 'passarinhar/profile.js' %}"></script>

@@ -1,30 +1,54 @@
 {% extends "passarinhar/layout.html" %}
+{% load static %}
 {% load l10n %}
 {% block body %}
-    {% if message %}
-        {% if updated %}
-        <div class="alert alert-success" role="alert">
-            {{ message }}
-        </div>
+{% if message %}
+{% if updated %}
+<div class="alert alert-success" role="alert">{{ message }}</div>
+{% else %}
+<div class="alert alert-warning" role="alert">{{ message }}</div>
+{% endif %}
+{% endif %}
+<h2>{{ title }}</h2>
+<div class="p-1 my-1 row bg-white text-dark border border-secondary">
+    <div class="col-12">
+        <a href="{% url 'passarinhar:allsightings' %}">Voltar para a lista de avistamentos</a>
+    </div>
+    <div class="col-6">
+        {% if user.is_authenticated and user == sighting.birder %}
+        <form action="{% url 'passarinhar:edit_sighting' sighting.id %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input class="btn btn-primary" type="submit" value="Salvar">
+            <a class="btn btn-secondary" href="{% url 'passarinhar:sighting' sighting.id %}">Cancelar</a>
+            <a class="btn btn-danger" href="{% url 'passarinhar:delete_sighting' sighting.id %}">Deletar</a>
+        </form>
         {% else %}
-        <div class="alert alert-warning" role="alert">
-            {{ message }}
-        </div>
-        {% endif %}
-    {% endif %}
-    <div class="p-1 my-1 bg-white text-dark border border-secondary">
-        <h2>{{ sighting.title }}</h2>
-        <img src="{{sighting.url_img}}" alt="{{sighting.title}}" title="{{sighting.title}}" class="img-responsive" />      
-        <p>{{ sighting.description }}</p>
-        <hr>        
         <ul>
-        <li>Especie: {{ sighting.spice }}</li>
-        <li>Usuário: {{ sighting.birder }}</li>
-        <li>Local: {{ sighting.place }}</li>
-        <li>Data: {{ sighting.date_created }}</li>
-        </ul> 
-        <div class="container">                                             
-            <a href="{% url 'passarinhar:allsightings' %}">Voltar para a lista de avistamentos</a>                    
+            <li>
+                {{ sighting.description|linebreaksbr }}
+            </li>
+            <li>
+                {{ sighting.birder }}
+            </li>
+            <li>
+                {{ sighting.place }}
+            </li>
+            <li>
+                {{ sighting.date_created }}
+            </li>
+        </ul>
+        {% endif %}
+        <div id="map">
+            {{ home_map|safe }}
         </div>
-    </div>  
+    </div>
+    <span class="spice col-6" id='{{sighting.spice.id}}'>
+        {% include 'passarinhar/components/spice_card.html' with spice=sighting.spice %}
+    </span>
+
+</div>
+{% block script %}
+<script type="module" src="{% static 'passarinhar/sighting.js' %}"></script>
+{% endblock %}
 {% endblock %}

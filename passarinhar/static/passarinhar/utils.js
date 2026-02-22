@@ -66,7 +66,9 @@ function getCoordinates() {
     return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
             // Pass the resolve and reject functions as the callbacks
-            navigator.geolocation.getCurrentPosition(resolve, reject);
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+            });
         } else {
             reject(new Error("Geolocalização não é suportada pelo seu navegador"));
         }
@@ -79,13 +81,71 @@ export const getCurrentLocation = async () => {
         sessionStorage.geolocation = 1;
         sessionStorage.lat = position.coords.latitude;
         sessionStorage.lon = position.coords.longitude;
-        // console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lon);
+        console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lon);
         // Use the latitude and longitude as needed
     } catch (error) {
         console.error("Utils: Error retrieving location:", error.message);
         sessionStorage.geolocation = 0;
         // Handle the error appropriately in your UI
     }
+}
+
+export const getTaxonomy = (spice_code) => {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const url = '/taxonomy_view'
+    var selector = `#spice-taxo${spice_code}`
+
+    console.log('Taxonomy spice_code', selector)
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken // Include the CSRF token in the headers
+        },
+        body: JSON.stringify({
+            species_code: spice_code
+        })
+    })
+        .then(response => response.json())
+        .then(res => {
+            const data = res.data
+
+            /*const name = document.createElement('li');
+            var txtName = `Nome comum: ${data[0].comName}`;
+            name.innerHTML = txtName;
+            document.querySelector(selector).append(name);
+            console.log('Taxon name:', name.innerHTML);
+            console.log('Taxon data:', data);*/
+
+            const sciName = document.createElement('li');
+            var txtSciName = `Nome científico: ${data[0].sciName} `;
+            sciName.innerHTML = txtSciName;
+            document.querySelector(selector).append(sciName);
+            console.log('Taxon Sciname:', sciName.innerHTML);
+
+            const order = document.createElement('li');
+            var txtOrder = `Ordem: ${data[0].taxonOrder} - ${data[0].order}`;
+            order.innerHTML = txtOrder;
+            console.log('Taxon order:', order.innerHTML);
+            document.querySelector(selector).append(order);
+
+            const family = document.createElement('li');
+            var txtFamily = `Familia: ${data[0].familyCode} - ${data[0].familySciName}`;
+            family.innerHTML = txtFamily;
+            document.querySelector(selector).append(family);
+
+            const family2 = document.createElement('li');
+            var txtFamily2 = data[0].familyComName;
+            family2.innerHTML = txtFamily2;
+            document.querySelector(selector).append(family2);
+
+            document.querySelector(selector).style.display = 'block';
+
+        })
+        .catch(() => {
+            error => console.error('Error:', error)
+        });
+    return
 }
 
 export const getRLCategory = (rlcat) => {

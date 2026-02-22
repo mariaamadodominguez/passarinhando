@@ -1,104 +1,18 @@
-textarea {
-  min-height: 100px;
-}
-
 /* menu */
 #menu {
-  background-color: #229ac8;
-  background-image: linear-gradient(to bottom, #23a1d1, #1f90bb);
   background-repeat: repeat-x;
-  border-color: #1f90bb #1f90bb #145e7a;
-  min-height: 40px;
-}
-
-#menu .nav {
-  flex-direction: initial;
+  background-color: forestgreen;
 }
 
 #menu .nav>li>a {
   color: #fff;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  padding: 10px 15px 10px 15px;
-  min-height: 15px;
   background-color: transparent;
 }
 
-#menu .nav>li>a:hover,
-#menu .nav>li.open>a {
-  background-color: rgba(0, 0, 0, 0.1);
+a {
+  color: forestgreen;
 }
 
-#menu #category {
-  float: left;
-  padding-left: 15px;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 40px;
-  color: #fff;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
-}
-
-#menu .btn-navbar {
-  font-size: 15px;
-  font-stretch: expanded;
-  color: #FFF;
-  padding: 2px 18px;
-  float: right;
-  background-color: #229ac8;
-  background-image: linear-gradient(to bottom, #23a1d1, #1f90bb);
-  background-repeat: repeat-x;
-  border-color: #1f90bb #1f90bb #145e7a;
-}
-
-#menu .btn-navbar:hover,
-#menu .btn-navbar:focus,
-#menu .btn-navbar:active,
-#menu .btn-navbar.disabled,
-#menu .btn-navbar[disabled] {
-  color: #ffffff;
-  background-color: #229ac8;
-}
-
-@media (min-width: 768px) {
-  #menu .dropdown:hover .dropdown-menu {
-    display: block;
-  }
-}
-
-@media (max-width: 767px) {
-  #menu {
-    border-radius: 4px;
-  }
-}
-
-/* content */
-#content {
-  min-height: 600px;
-}
-
-#comments {
-  padding: 10px 15px 10px 15px;
-  background-color: #EEEEEE;
-  color: #888;
-  border: 1px solid #414040;
-  border-radius: 4px;
-  overflow: auto;
-}
-
-#comments .caption {
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 10px;
-  overflow: auto;
-}
-
-
-@media (min-width: 992px) and (max-width: 1199px) {
-
-  #content .col-md-2:nth-child(6n+1),
-  #content .col-md-2:nth-child(6n+1),
-  #content .col-md-3:nth-child(4n+1),
-  #content .col-md-4:nth-child(3n+1),
-  #content .col-md-6:nth-child(2n+1) {
-    clear: left;
-  }
+a:hover {
+  text-decoration: none;
 }

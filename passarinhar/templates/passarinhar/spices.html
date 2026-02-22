@@ -29,115 +29,31 @@
 
 </nav>
 {% for spice in spices %}
-<div class="p-1 my-1 bg-white text-dark border border-secondary">
 
+<div class="p-1 my-1 bg-white text-dark border border-secondary">
     <div id='spice-div{{spice.id}}' style="display:block" class="my-1">
-        <img src="{{ spice.image.thumbnails.small.url}}">
+        <img class="img-responsive" src="{{ spice.image.thumbnails.small.url}}">
         <span class="text-capitalize">{{ spice.name }}</span>
         <span class="text-capitalize font-italic">{{ spice.scientific_name }}</span>
     </div>
     <button type="submit" id='{{spice.id}}' class="btn btn-info">Info</button>
-    <div id="spice-view{{spice.id}}" class="p-1 my-1 bg-white text-dark" style="display:none">
-        <img src="{{spice.image.url}}" alt="{{spice.name}}" title="{{spice.name}}" class="img-responsive img-thumbnail">
-        <h2 class="text-capitalize">{{ spice.name }}</h2>
-        <ul>
-            <li>
-                Nome comum (pt): {{ spice.name }} / {{ spice.DTScientific_name.Common_name}}
-            </li>
-            <li>
-                Nome cientifico: {{ spice.scientific_name }}
-            </li>
-            <li>
-                Código da espécie (eBird): {{ spice.spice_code }}
-            </li>
-            <li>
-                Família: {{ spice.DTScientific_name.Family}}
-            </li>
-            <li>Estado de Conservação: <span id='spice-rl{{spice.id}}'
-                    class="badge">{{spice.DTScientific_name.RL_Category}}</span>
-            </li>
-            <li>
-                Observação: {{ spice.description }}
-            </li>
-        </ul>
-        <h3 class="text-capitalize">População</h3>
-        <ul title="População">
-            <li>Número de indivíduos adultos:
-                {% if spice.DTScientific_name.Population_size == "Unknown" %}
-                Desconhecido
-                {% else %}
-                {{ spice.DTScientific_name.Population_size}}
-                {% endif %}
-            </li>
-            <li>Tendência populacional atual:
-                {%if spice.DTScientific_name.Current_population_trend == "Increasing"%}
-                Crescente
-                <i class="bi bi-arrow-up-right text-success h5"></i>
-                {%elif spice.DTScientific_name.Current_population_trend == "Decreasing"%}
-                Decrescente
-                <i class="bi bi-arrow-down-right text-danger h5"></i>
-                {%else%}
-                Estável
-                <i class="bi bi-arrow-right text-warning h5"></i>
-                {%endif%}
-            </li>
-            <li>Possível Extinção:
-                <span id='spice-pe{{spice.id}}' class="yes-no badge">{{spice.DTScientific_name.PE}}</span>
-            </li>
-            <li>Possível Extinção na Natureza:
-                <span id='spice-pew{{spice.id}}' class="yes-no badge">{{spice.DTScientific_name.PEW}}</span>
-            </li>
-            <li>
-                Fonte da População: {{ spice.DTScientific_name.Population_size_derivation}}
-            </li>
-            <li>
-                Fonte da Tendência Populacional: {{spice.DTScientific_name.Current_population_trend_derivation}}
-            </li>
-        </ul>
-        <h3 class="text-capitalize">Tipo de ave</h3>
-        <ul title="Tipo de ave">
-            {% if spice.DTScientific_name.Seabird == "TRUE" %}
-            <li>Marinho</li>
-            {% endif %}
-            {% if spice.DTScientific_name.Waterbird == "TRUE" %}
-            <li>Aquático</li>
-            {% endif %}
-            {% if spice.DTScientific_name.Landbird == "TRUE" %}
-            <li>Terrestre</li>
-            {% endif %}
-        </ul>
-        <h3 class="text-capitalize">Habitat</h3>
-        <ul title="Habitat">
-            <li>
-                Estado Migratório: {{ spice.DTScientific_name.Migratory_status}}
-            </li>
-            {% if spice.DTScientific_name.RL_AOO != "0" %}
-            <li>
-                Área de Ocupação: {{ spice.DTScientific_name.RL_AOO}} Km2
-            </li>
-            {% endif %}
-            <li>
-                Extensão da Ocorrência: {{ spice.DTScientific_name.RL_EOO}} Km2
-            </li>
-        </ul>
-        <h3 class="text-capitalize">Ecossistema</h3>
-        <ul title="Ecosistema">
-            {% if spice.DTScientific_name.Ecosystem_Terrestrial == "TRUE" %}
-            <li>Terrestre</li>
-            {% endif %}
-            {% if spice.DTScientific_name.Ecosystem_Freshwater == "TRUE" %}
-            <li>Fluvial</li>
-            {% endif %}
-            {% if spice.DTScientific_name.Ecosystem_Marine == "TRUE" %}
-            <li>Marino</li>
-            {% endif %}
-        </ul>
+    <div id="spice-view{{spice.id}}" class="row" style="display:none">
+        <div class="col-5">
+            {% include 'passarinhar/components/spice_card.html' with spice=spice %}
+        </div>
+        <div class="col-7">
+            <h5 class="text-capitalize">Distribuição</h5>
+            {% csrf_token %}
+            <div id="spice-map{{spice.spice_code}}">{{ spice_map|safe }}</div>
+
+        </div>
+
     </div>
 </div>
 {% endfor %}
 
 
 {% block script %}
-<script src="{% static 'passarinhar/spices.js' %}"></script>
+<script type="module" src="{% static 'passarinhar/spices.js' %}"></script>
 {% endblock %}
 {% endblock %}

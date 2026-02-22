@@ -36,7 +36,7 @@
             <span>Última Observação: {{place.latestObsDt}}</span>
             <span>Total Especies: {{place.numSpeciesAllTime}}</span>
             <div id="recent-obs{{place.id}}">
-                <a href="{% url 'passarinhar:localrecents' place.lat place.lon %}">Avistamentos recentes</a>
+                <a href="{% url 'passarinhar:localrecents' place.lat place.lon place.place%}">Avistamentos recentes</a>
             </div>
 
         </div>

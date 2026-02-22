@@ -7,6 +7,39 @@ document.addEventListener('DOMContentLoaded', () => {
             saveLocal(_btn.id));
     })
 
+    // Get all radio buttons in the 'my_choice' group
+    const radioButtons = document.querySelectorAll('input[name="tipo_procura"]');
+    // console.log('Radio button selected:', radioButtons);
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function () {
+            // This code runs immediately when a selection is changed
+            console.log('Radio button selected:', this.value);
+
+            const placeField = document.getElementById('id_place');
+            const labelSelector = "label[for='id_place']";
+            const label = document.querySelector(labelSelector);
+
+            if (this.value === 'L') {
+                placeField.style.display = 'block';
+                if (label) {
+                    label.style.display = "block";
+                }
+                placeField.required = true
+            } else {
+                placeField.style.display = 'none';
+                if (label) {
+                    label.style.display = "none";
+                }
+                placeField.required = false
+            }
+            console.log('placeField.style.display:', placeField, placeField.style.display);
+        });
+    });
+    const firstRadio = document.querySelector('input[name="tipo_procura"]');
+    if (firstRadio) {
+        firstRadio.focus();
+        firstRadio.click();
+    }
 
     function saveLocal(local_id) {
         url = '/addNewLocal'

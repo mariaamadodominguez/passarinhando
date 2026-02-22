@@ -37,11 +37,11 @@
         </div>
         {% if user.is_authenticated %}
         {% csrf_token %}
-        <button id="{{ forloop.counter0 }}" type="submit" class="save-button button">Salvar local</button>
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-primary">Salvar local</button>
         {% endif %}
         <div id="recent-obs{{local.locId}}">
             <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
-            <a href="{% url 'passarinhar:localrecents' local.lat local.lng %}">Avistamentos recentes</a>
+            <a href="{% url 'passarinhar:localrecents' local.lat local.lng local.locName%}">Avistamentos recentes</a>
         </div>
         <ul>
             <li>Id. do local: <span id="locId{{forloop.counter0}}">{{local.locId}}</span></li>
@@ -51,15 +51,13 @@
         </ul>
     </div>
     {% empty %}
-    <div>*** Nenhum local encontrado***</div>
+    <div>*** Nenhuma localidade encontrada ***</div>
     {% endfor %}
 </div>
 {% endif %}
 {% block script %}
 <script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
-{% if user.is_authenticated %}
 <script src="{% static 'passarinhar/locals.js' %}"></script>
-{% endif %}
 {% endblock %}
 
 {% endblock %}

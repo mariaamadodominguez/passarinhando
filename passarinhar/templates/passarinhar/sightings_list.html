@@ -2,22 +2,46 @@
 {% load l10n %}
 
 {% block body %}
-    <h2>{{ title }}</h2>
-    {% for sighting in sightings %}
-        <div class="p-1 my-1 bg-white text-dark border border-secondary">
-            <h4><a href = "{% url 'passarinhar:sighting' sighting.id %}">{{ sighting.common_name }}</a></h4>
-            <div class="image">
-                <img src="{{ sighting.url_img }}" alt="{{ sighting.title }}" title="{{ sighting.common_name }}" class="img-responsive" />
-            </div>
-            <div class="details">                    
-                {{ sighting.description }}
-                <div class="info">                        
-                    {{ sighting.spice }}
-                    {{ sighting.place }}
-                    {{ sighting.birder }}
-                    {{ sighting.date_created }}
-                </div>
-            </div>        
-        </div>                                                
-    {% endfor %}      
+<h2>{{ title }}</h2>
+<div id='new-sighting-view' class="p-1 my-1 bg-white text-dark border border-secondary" style="display: block;">
+    {% if user.is_authenticated %}
+    <h5>Registrar Avistamento</h5>
+    {% if message %}
+    {% if updated %}
+    <div class="alert alert-success" role="alert">{{ message }}</div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">{{ message }}</div>
+    {% endif %}
+    {% endif %}
+    <form action="{% url 'passarinhar:addNewSighting' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.as_p }}
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Registrar</button>
+        </div>
+    </form>
+    {% else %}
+    <p>Faça <a href="{% url 'passarinhar:login' %}">login</a> para registrar avistamentos</p>
+    {% endif %}
+</div>
+{% for sighting in sightings %}
+<div class="p-1 my-1 bg-white text-dark border border-secondary">
+    <h4><a href="{% url 'passarinhar:sighting' sighting.id %}">{{ sighting.common_name }}</a></h4>
+    <div class="image">
+        <img src="{{sighting.spice.image.thumbnails.small.url}}" alt="{{sighting.spice.name}}"
+            title="{{sighting.spice.name}}" class="img-responsive img-thumbnail">
+    </div>
+    <div class="details">
+        {{ sighting.description }}
+        <div class="info">
+            {{ sighting.spice }}
+            {{ sighting.place }}
+            {{ sighting.birder }}
+            {{ sighting.date_created }}
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

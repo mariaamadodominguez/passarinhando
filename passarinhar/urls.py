@@ -11,14 +11,18 @@ urlpatterns = [
     path("<str:username>/profile", views.profile, name="profile"),
     path("recents", views.recent_observations_view, name="recents"),
     path("locals", views.hotspots_nearby_view, name="locals"),
+    path("geoloc", views.geo_view, name="geo_view"),
     path("foro", views.foro, name="foro"),
     path("mysightings", views.mysightings, name="mysightings"),
     path("allsightings", views.allsightings, name="allsightings"),
     path("favourites", views.favourites, name="favourites"),
     path("allplaces", views.allplaces, name="allplaces"),
     path("allspices", views.allspices, name="allspices"),
-    path("<str:lat>/<str:lon>/localrecents", views.localrecents, name="localrecents"),
+    path("<str:lat>/<str:lon>/<str:place>/localrecents", views.localrecents, name="localrecents"),
     path("sighting/<int:sighting_id>", views.sighting, name="sighting"),
+    path("edit_sighting/<int:sighting_id>", views.edit_sighting, name="edit_sighting"),
+    path("delete_sighting/<int:sighting_id>", views.delete_sighting, name="delete_sighting"),
+    path("addNewSighting", views.addNewSighting, name="addNewSighting"),
 
     # API Routes
     path("addNewPost", views.addNewPost, name="addNewPost"), 
@@ -29,4 +33,6 @@ urlpatterns = [
     path("addRemoveFollowing", views.addRemoveFollowing, name='addRemoveFollowing'),    
     path("updPostContent", views.updPostContent, name='updPostContent'),   
     path("birdoftheday", views.bird_of_the_day_view, name="birdoftheday"),
+    path("spice_map_view", views.spice_map_view, name="spice_map_view"),
+    path("taxonomy_view", views.taxonomy_view, name="taxonomy_view"),
 ]

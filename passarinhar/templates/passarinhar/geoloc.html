@@ -1,0 +1,58 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2 id="page-title">{{ title }}</h2>
+
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
+<div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        {{ form.as_p }}
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Procurar geo-localização</button>
+    </div>
+
+</form>
+{% if geo_data %}
+<div class='container'>
+    {% for gdcity in geo_data.data %}
+    <div class="p-1 my-1 bg-white text-dark border border-secondary">
+        <h3 id="name{{ forloop.counter0 }}">{{ gdcity.name }}</h3>
+        <ul>
+            <li id="coords{{forloop.counter0}}">Coordenadas
+                <ul>
+                    <li>Latitude: <span id="lat{{forloop.counter0}}">{{gdcity.lat}}</span></li>
+                    <li>Longitude: <span id="lon{{forloop.counter0}}">{{gdcity.lon}}</span></li>
+                </ul>
+            </li>
+            <li>Estado: <span id="subnational2Code{{forloop.counter0}}">{{ gdcity.state }}</li>
+            <li>País: <span id="locId{{forloop.counter0}}">{{ gdcity.country }}</span></li>
+        </ul>
+        <div hidden>
+            <span id="latestObsDt{{forloop.counter0}}">N/I</span>
+            <span id="numSpeciesAllTime{{forloop.counter0}}">0</span>
+        </div>
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-primary">Salvar</button>
+        {% endif %}
+
+    </div>
+    {% empty %}
+    <div>*** Nenhum local encontrado***</div>
+    {% endfor %}
+
+</div>
+{% endif %}
+
+
+{% if user.is_authenticated %}
+<script src="{% static 'passarinhar/locals.js' %}"></script>
+{% endif %}
+{% endblock %}
