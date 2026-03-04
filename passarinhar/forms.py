@@ -1,9 +1,15 @@
 from django import forms
 from .models import Spice, Place, DataZoneSpecie
+
+ORDER_CHOICES = [
+    ('D', 'Por data'),
+    ('E', 'Por taxonomia'),
+]
+
 RECENT_CHOICES = [
+    ('R', 'Avistamentos nas redondezas'),    
     ('L', 'Avistamentos num local ou região'),
-    ('R', 'Avistamentos nas redondezas'),
-    ('N', 'Avistamentos notaveis nas redondezas'),
+    ('N', 'Avistamentos notaveis'),
 ]
 LOCAL_CHOICES = [    
     ('L', 'Procurar local ou região'),
@@ -11,7 +17,7 @@ LOCAL_CHOICES = [
 ]
 
 class NewPostForm(forms.Form):      
-    post_content = forms.CharField(widget=forms.Textarea(attrs={'max_length':'120', "rows":"10",'class': 'form-control', 'placeholder': 'Escreve um post'}), label=False)
+    post_content = forms.CharField(widget=forms.Textarea(attrs={'max_length':'120', "rows":"10",'class': 'form-control', 'placeholder': 'Escreva um post'}), label=False)
     
 
 class CommentForm (forms.Form):
@@ -24,29 +30,30 @@ class GeoForm(forms.Form):
 
 class LocalsForm(forms.Form):
     tipo_procura = forms.ChoiceField(
-        label='Tipo de Procura',
+        label='',
         choices=LOCAL_CHOICES,
         widget=forms.RadioSelect,
-        help_text="Encontre lugares de destaque de um determinado local ou região, ou próximos a sua localização, dentro de um raio de até 500 quilômetros, a partir de um conjunto de coordenadas."
+        help_text="Encontre lugares de destaque de um determinado local ou região, ou próximos a sua localização, dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas."
     )
-    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'radio do local atual Km (max 500)'}), required=True, label='', min_value=1, max_value=500)
     place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset=  Place.objects.all(), required=False, label='', empty_label="(Selecione o local)")    
-    lat = forms.CharField(widget=forms.HiddenInput(attrs={'id':'crnt-lat', 'max_length':'25', 'class':'form-control','label': 'Latitude'}))    
-    lon =forms.CharField(widget=forms.HiddenInput(attrs={'id':'crnt-lon', 'max_length':'25', 'class':'form-control','label': 'Longitude'}))    
+    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'distance', 'step': "1",'class': 'form-control', 'placeholder': 'radio do local atual Km (max 50)'}), required=True, label='', min_value=1, max_value=50)    
     
-
 class RecentsForm(forms.Form):
-    recent = forms.ChoiceField(
-        label='Tipo de Procura',
+    tipo_procura = forms.ChoiceField(       
+        label='',
         choices=RECENT_CHOICES,
         widget=forms.RadioSelect,
-        help_text="Obtenha a lista de observações recentes e notáveis ​​(até 30 dias atrás) de aves avistadas em locais dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas fornecido. Observações notáveis ​​podem se referir a espécies raras local ou nacionalmente, ou a aves incomuns por outros motivos, como, por exemplo, aves invernantes de uma espécie que normalmente só visita o local no verão. Os resultados incluem apenas a observação mais recente para cada espécie na região especificada."        
+        help_text="Obtenha a lista de observações recentes e notáveis ​​(até 30 dias atrás) de aves avistadas em locais dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas fornecido. Observações notáveis ​​podem se referir a espécies raras local ou nacionalmente, ou a aves incomuns por outros motivos, como, por exemplo, aves invernantes de uma espécie que normalmente só visita o local no verão. Os resultados incluem apenas a observação mais recente para cada espécie na região especificada"        
     )
-    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=True, label="Selecione o local")
-    
-    lat = forms.CharField(widget=forms.HiddenInput(attrs={'id':'crnt-lat', 'max_length':'25', 'class':'form-control','label': ''}))    
-    lon =forms.CharField(widget=forms.HiddenInput(attrs={'id':'crnt-lon', 'max_length':'25', 'class':'form-control','label': ''}))    
-    quantos = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Quantos'}), label="Quantos" , min_value=1, max_value=30)
+    tipo_ordem = forms.ChoiceField(        
+        label='',
+        choices=ORDER_CHOICES,
+        widget=forms.RadioSelect,
+        help_text='Ordene as observações por taxonomia ou por data, da mais recente para a mais antiga'
+    )
+    quantos = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Número de observações (máx.1000)'}), label='', min_value=1, max_value=1000)
+    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'dist', 'step': "1",'class': 'form-control', 'placeholder': 'Radio do local Km (max 50)'}), required=True, label='', min_value=1, max_value=50)    
+    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=False, label='', empty_label="(Selecione o local)")
 
 class SightingForm(forms.Form):   
     from datetime import datetime, timedelta
@@ -59,7 +66,7 @@ class SightingForm(forms.Form):
                 'onfocus': "(this.type='date')", }
         ),
         label="Data")
-    spice = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Spice.objects.all(), required=True, label="Selecione a espécie")
-    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=True, label="Selecione o local")
+    spice = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Spice.objects.all(), required=True, label='', empty_label="(Selecione a espécie)")
+    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=True, label='', empty_label="(Selecione o local)")
     description =  forms.CharField(widget=forms.Textarea(attrs={'max_length':'120', "rows":"4",'class': 'form-control', 'placeholder': 'Descreva o avistamento'}), label='')
   

@@ -35,4 +35,5 @@ urlpatterns = [
     path("birdoftheday", views.bird_of_the_day_view, name="birdoftheday"),
     path("spice_map_view", views.spice_map_view, name="spice_map_view"),
     path("taxonomy_view", views.taxonomy_view, name="taxonomy_view"),
+    path("get_data_zone_specie", views.get_data_zone_specie, name="get_data_zone_specie")
 ]

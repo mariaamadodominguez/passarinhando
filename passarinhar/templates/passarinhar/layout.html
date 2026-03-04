@@ -34,15 +34,14 @@
             <li class="nav-item"><a class="nav-link" id="all-places" href="{% url 'passarinhar:allplaces' %}">Locais de
                     passarinhada</a>
             </li>
-            <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a></li>
             {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a></li>
             <li class="nav-item"><a class="nav-link" id="user"
                     href="{% url 'passarinhar:profile' user.username %}">{{user.username}}</a></li>
 
             <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a></li>
             {% else %}
             <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:register' %}">Cadastrar</a></li>
             {% endif %}
         </ul>
     </nav>

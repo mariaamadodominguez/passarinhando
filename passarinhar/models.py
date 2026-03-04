@@ -87,9 +87,9 @@ class Comment(models.Model):
 class DataZoneSpecie(models.Model):
     SIS_ID  = models.CharField(max_length=20, blank=True)
     Sequence = models.CharField(max_length=20, blank=True)
-    Family = models.CharField(max_length=20, blank=True)
-    Scientific_name = models.CharField(max_length=20, blank=True)
-    Common_name = models.CharField(max_length=20, blank=True)
+    Family = models.CharField(max_length=64, blank=True)
+    Scientific_name = models.CharField(max_length=64, blank=True)
+    Common_name = models.CharField(max_length=64, blank=True)
     RL_Category = models.CharField(max_length=20, blank=True)
     PE = models.CharField(max_length=20, blank=True)
     PEW = models.CharField(max_length=20, blank=True)

@@ -1,11 +1,13 @@
 var sessionStoragegeolocation = 0;
-export const searchWikiData = async (comName, sciName) => {
+export const searchWikiData = async (comName, sciName, enComName = '') => {
     var img_url = "";
     var pageData = null
 
     var en_url = "https://en.wikipedia.org/w/api.php";
     var pt_url = "https://pt.wikipedia.org/w/api.php";
+    // var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)";
     var titles = comName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + sciName;
+
     var params = new URLSearchParams({
         action: "query",
         prop: "pageimages|pageprops",
@@ -14,17 +16,17 @@ export const searchWikiData = async (comName, sciName) => {
         format: "json",
         origin: "*"
     });
-    // console.log(titles)
     // console.log(`${pt_url}?${params}`)
     await fetch(`${pt_url}?${params}`)
         .then(response => response.json())
         .then(res => {
-            //console.log(res)
+            // console.log(res)
             for (var i = 0; i < Object.keys(res.query.pages).length; i++) {
                 pageData = res.query.pages[Object.keys(res.query.pages)[i]];
                 if (pageData.thumbnail) {
                     img_url = pageData.thumbnail.source
-                    //console.log(i, pageData, img_url)
+                    // console.log(i, pageData, img_url)
+                    break;
                 }
             }
 
@@ -33,14 +35,19 @@ export const searchWikiData = async (comName, sciName) => {
             (error) => console.error('Error:', error)
         );
     if (img_url == "") {
+        if (enComName == '')
+            titles = sciName
+        else
+            titles = sciName + "|" + replaceSecondOccurrence(enComName, '-', ' ')
         params = new URLSearchParams({
             action: "query",
             prop: "pageimages|pageprops",
             pithumbsize: "300",
-            titles: sciName,
+            titles: titles,
             format: "json",
             origin: "*"
         });
+        // console.log(`${en_url}?${params}`)
         await fetch(`${en_url}?${params}`)
             .then(response => response.json())
             .then(data => {
@@ -48,7 +55,7 @@ export const searchWikiData = async (comName, sciName) => {
                     pageData = data.query.pages[Object.keys(data.query.pages)[i]];
                     if (pageData.thumbnail) {
                         img_url = pageData.thumbnail.source
-                        console.log(en_url, i, pageData, img_url)
+                        // console.log(en_url, i, pageData, img_url)
                     }
                 }
             })
@@ -61,7 +68,25 @@ export const searchWikiData = async (comName, sciName) => {
     }
     return img_url;
 }
+function capitalizeFirstLetter(string) {
+    // console.log(string)
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
 
+function replaceSecondOccurrence(originalString, search, replace) {
+    let count = 0;
+    // Use a global regex to find all occurrences
+    const regex = new RegExp(search, 'g');
+
+    const newString = originalString.replace(regex, (match) => {
+        count++;
+        // If it's the second occurrence (count === 2), return the replacement string, 
+        // otherwise return the original match
+        return (count === 2) ? replace : match;
+    });
+    // console.log(newString, capitalizeFirstLetter(newString))
+    return capitalizeFirstLetter(newString);
+}
 function getCoordinates() {
     return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
@@ -92,10 +117,11 @@ export const getCurrentLocation = async () => {
 
 export const getTaxonomy = (spice_code) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const url = '/taxonomy_view'
-    var selector = `#spice-taxo${spice_code}`
+    const url = '/taxonomy_view';
+    var selector = `#spice-taxo${spice_code}`;
 
-    console.log('Taxonomy spice_code', selector)
+    document.querySelector(selector).innerHTML = "";
+    // console.log('Taxonomy spice_code', selector)
     fetch(url, {
         method: 'POST',
         headers: {
@@ -109,24 +135,18 @@ export const getTaxonomy = (spice_code) => {
         .then(response => response.json())
         .then(res => {
             const data = res.data
-
-            /*const name = document.createElement('li');
-            var txtName = `Nome comum: ${data[0].comName}`;
-            name.innerHTML = txtName;
-            document.querySelector(selector).append(name);
-            console.log('Taxon name:', name.innerHTML);
-            console.log('Taxon data:', data);*/
+            // console.log('Taxon data:', data);
 
             const sciName = document.createElement('li');
             var txtSciName = `Nome científico: ${data[0].sciName} `;
             sciName.innerHTML = txtSciName;
             document.querySelector(selector).append(sciName);
-            console.log('Taxon Sciname:', sciName.innerHTML);
+            // console.log('Taxon Sciname:', sciName.innerHTML);
 
             const order = document.createElement('li');
             var txtOrder = `Ordem: ${data[0].taxonOrder} - ${data[0].order}`;
             order.innerHTML = txtOrder;
-            console.log('Taxon order:', order.innerHTML);
+            // console.log('Taxon order:', order.innerHTML);
             document.querySelector(selector).append(order);
 
             const family = document.createElement('li');
@@ -145,13 +165,13 @@ export const getTaxonomy = (spice_code) => {
         .catch(() => {
             error => console.error('Error:', error)
         });
-    return
+    return;
 }
 
 export const getRLCategory = (rlcat) => {
     var rl = rlcat.innerHTML
     let RL_CATEGORY;
-    console.log('selector', rlcat, 'inner', rl.trim())
+    // console.log('selector', rlcat, 'inner', rl.trim())
     switch (rl.trim()) {
         case 'EX':
             RL_CATEGORY = 'Extincto';

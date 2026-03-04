@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => {
                 const data = res.data
                 const bird = res.bird
-                console.log('Success res:', res);
-                console.log('Success data:', data[0].sciName);
+                // console.log('Success res:', res);
+                // console.log('Success data:', data[0].sciName);
                 document.querySelector('#common-name').innerHTML = data[0].comName;
                 document.querySelector('#spiceCode').innerHTML = data[0].speciesCode;
                 document.querySelector('#sci-name').innerHTML = data[0].sciName;
@@ -36,17 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 //console.log('document.querySelector(`#spice-rl`).innerHTML ', document.querySelector(`#spice-rl`).innerHTML)
                 //console.log('bird', bird)
-                var LC;
+                var LC, enCommon_name;
                 for (const item of JSON.parse(bird)) {
                     //console.log(item.fields);
                     //console.log(item.fields.RL_Category)
-                    LC = item.fields.RL_Category
+                    LC = item.fields.RL_Category;
+                    enCommon_name = item.fields.Common_name;
                 }
                 //console.log(LC);
                 document.querySelector(`#spice-rl`).innerHTML = LC;
                 getRLCategory(document.querySelector(`#spice-rl`));
 
-                displayBirdImg(data[0])
+                displayBirdImg(data[0], enCommon_name)
                 document.getElementById(`bird-of-the-day`).style.display = "block";
 
                 document.getElementById(`debossan`).innerHTML = res.debossan_map;
@@ -60,8 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
     showBirdofTheDay()
 })
 
-const displayBirdImg = async (ebirddata) => {
-    const img_url = await searchWikiData(ebirddata.comName, ebirddata.sciName);
-    //console.log(img_url, ebirddata)
+const displayBirdImg = async (ebirddata, enCommon_name) => {
+    const img_url = await searchWikiData(ebirddata.comName, ebirddata.sciName, enCommon_name);
+    console.log(img_url, enCommon_name)
     document.getElementById('bird-img').src = img_url;
 }

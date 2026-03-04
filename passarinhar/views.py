@@ -21,6 +21,7 @@ import urllib.request
 
 def fetch_species_taxonomy(species_code):
     api_key = settings.EBIRD_API_KEY
+    data=''
     locale = "pt-br"
     url = f"https://api.ebird.org/v2/ref/taxonomy/ebird?species={species_code}&fmt=json&locale={locale}"
     # print(url)
@@ -28,10 +29,17 @@ def fetch_species_taxonomy(species_code):
     headers = {
       'X-eBirdApiToken': api_key
     }    
-    response = requests.request("GET", url, headers=headers, data=payload)    
-    #print(api_key, response.text)
-    
-    data = response.json()
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent 
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response
+        print(response.json())  
+        data = response.json()
     return {
         'data': data 
     }
@@ -57,7 +65,8 @@ def fetch_hotspots_nearby(lat, lon, dist = 25, region='BR-RJ-049'):
         print(f"An unexpected error occurred: {err}")
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
-        # Process the successful response, e.g., print(response.json())
+        # Process the successful response, e.g., 
+        print(response.json())
         data = response.json()
 
     return {
@@ -65,58 +74,84 @@ def fetch_hotspots_nearby(lat, lon, dist = 25, region='BR-RJ-049'):
     }
 
 
-def fetch_recent_nearby_notable_observations(lat, lon, dist = 25, back = 30, hotspot = True, sppLocale = "pt-br"):
+def fetch_recent_nearby_notable_observations(lat, lon, dist = 250, back = 30, detail = 'simple', hotspot = True, sppLocale = "pt-br"):
     api_key = settings.EBIRD_API_KEY
-
-    url = f"https://api.ebird.org/v2/data/obs/geo/recent/notable?lat={lat}&lng={lon}&back={back}&dist={dist}&hotspot={hotspot}&sppLocale={sppLocale}"
+    data = ''
+    url = f"https://api.ebird.org/v2/data/obs/geo/recent/notable?lat={lat}&lng={lon}&detail={detail}&back={back}&dist={dist}&hotspot={hotspot}&sppLocale={sppLocale}"
     # print(url)
     payload={}
     headers = {
       'X-eBirdApiToken': api_key
     }    
-    response = requests.request("GET", url, headers=headers, data=payload)    
-    # print(api_key, response.text)
-    
-    data = response.json()
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload,timeout=5) # timeout to prevent indefinite waits            
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        # print(api_key, response.text)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response, e.g., 
+        print(response.json())    
+        data = response.json()
     return {
         'data': data 
     }
     
 def fetch_nearest_observations_of_a_species(species_code, lat, lon, dist= 50, back= 30, includeProvisional= True):
     api_key = settings.EBIRD_API_KEY
+    data = ''
     url = f"https://api.ebird.org/v2/data/nearest/geo/recent/{species_code}?lat={lat}&lng={lon}&dist={dist}&back={back}&includeProvisional={includeProvisional}"
     #print(url)
     payload={}
     headers = {
       'X-eBirdApiToken': api_key
     }    
-    response = requests.request("GET", url, headers=headers, data=payload)    
-    #print(api_key, response.text)
-    
-    data = response.json()
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent indefinite waits           
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        # print(api_key, response.text)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response, e.g., 
+        print(response.json())         
+        data = response.json()
     return {
         'data': data 
     }
 
-def fetch_recent_observations_in_a_region(lat, lon, howmany = 1,region = "BR-RJ-049", locale = "pt-br" ):
+def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dist= 25,region= "BR-RJ-049", locale= "pt-br"):
     api_key = settings.EBIRD_API_KEY 
     maxResults = howmany
+    data = ''
     if lat == '':
         # print('fetch_recent_observations_in_a_region')
         url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}"
     else:
         # print('fetch_recent_observations_in_a_LoC')
-        url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
+        url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sort={sort}&dist={dist}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
         
     #(url)
     payload={}
     headers = {
       'X-eBirdApiToken': api_key
     }    
-    response = requests.request("GET", url, headers=headers, data=payload)    
-    #print(api_key, response.text)
-    
-    data = response.json()
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent indefinite waits        
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        # print(api_key, response.text)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response, e.g., 
+        print(response.json())    
+        data = response.json()
     return {
         'data': data 
     }
@@ -267,8 +302,10 @@ def hotspots_nearby_view(request):
                 latitude = place_object.lat
                 longitude = place_object.lon                
             else : # selected_value == 'R''- nearby)  
-                latitude = request.POST["lat"]
-                longitude = request.POST["lon"]              
+                #latitude = request.POST["lat"]
+                latitude = request.session['crnt-lat']
+                #longitude = request.POST["lon"]    
+                longitude = request.session['crnt-lon']          
 
             print(latitude,longitude, dist)
             hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
@@ -354,6 +391,29 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
     # add places to map
     home_map.add_child(nearby_places)
     return home_map
+
+def get_data_zone_specie(request):
+    bird = None
+    try:
+        if request.headers.get('content-type') == 'application/json':      
+            data = json.loads(request.body)    
+            print(f'data_zone_specie(data): {data}' )
+            DZS_name = data.get('DZS_name','')
+            print(f'get_data_zone_specie(DZS_name): {DZS_name}' )
+            bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)                    
+            print({f"bird_data:  {bird_data}"})
+            bird = [bird for bird in bird_data] # Or use list(queryset)
+            bird = serializers.serialize('json', bird_data)
+            print({f"bird:  {bird}"})
+            return JsonResponse({
+                'bird':bird
+            }, content_type='application/json') 
+
+    except DataZoneSpecie.DoesNotExist:
+        # Handle the case where the object doesn't exist                    
+        print({f"error": "Record {DZS_name} not found."}, status=404)
+        return JsonResponse({'error': 'Nenhuma ave encontrada!'})
+    
 
 def bird_of_the_day_view(request):
     try:         
@@ -577,23 +637,45 @@ def localrecents(request, lat, lon, place):
                   })
     
 def recent_observations_view(request):
-    
+    title = 'Avistamentos recentes na região'
     recent_observations_data = None
     error = None
     if request.method == 'POST':
         form = RecentsForm(request.POST)
         if form.is_valid():
-            latitude = request.POST["lat"]
-            longitude = request.POST["lon"]
+            latitude = request.session["crnt-lat"]
+            longitude = request.session["crnt-lon"]                
             howmany = request.POST['quantos']    
-            recent_observations_data = fetch_recent_observations_in_a_region(
-                latitude,longitude,howmany)                                
+            dist = request.POST['dist']    
+                    
+            selected_value = form.cleaned_data['tipo_procura']  
+            place_object = form.cleaned_data['place']      
+            order_type = form.cleaned_data['tipo_ordem']  
+            if order_type == 'D':
+                sort_value ='date'
+            else:
+                sort_value = 'species'
+            if selected_value == 'N':                
+                title = f"Avistamentos notáveis perto de {place_object.place}"                 
+                recent_observations_data = fetch_recent_nearby_notable_observations(latitude,longitude, dist)
+            else :
+                if selected_value == 'L': # local 
+                    title = f"Avistamentos recentes perto de {place_object.place}"
+                    latitude = place_object.lat
+                    longitude = place_object.lon                                    
+                else:                     # nearby)  
+                    latitude = request.session['crnt-lat']                    
+                    longitude = request.session['crnt-lon']          
+
+                recent_observations_data = fetch_recent_observations_in_a_region(
+                    latitude,longitude,howmany, sort_value, dist)                                
+
             if len(recent_observations_data['data']) == 0 :
                 error = 'Nenhuma observação recente encontrada!'           
     else:  
-        form = RecentsForm(initial={"quantos":15})      
+        form = RecentsForm()      
     return render(request, "passarinhar/recentes.html", {
-            "title":'Avistamentos recentes na região',
+            "title": title,
             "form": form,
             "error":error,
             "recent_observations_data": recent_observations_data
