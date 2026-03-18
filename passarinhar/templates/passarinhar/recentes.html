@@ -31,10 +31,6 @@
 <div class="p-1 my-1 bg-white text-dark border border-secondary">
     <div id='spice-div{{ forloop.counter0 }}' style="display:block" class="my-1">
         <h3 id="name{{ forloop.counter0 }}">{{recent_observation.comName}}</h3>
-        {% if user.is_authenticated %}
-        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar especie
-        </button>
-        {% endif %}
         <ul>
             <li>Nome científico: <span id="sciName{{ forloop.counter0 }}">{{ recent_observation.sciName }}</span></li>
             <li>Código da espécie: <span
@@ -43,6 +39,10 @@
             <li>Local: <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}</span></li>
             <li>Quantidade: <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
         </ul>
+        {% if user.is_authenticated %}
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar especie
+        </button>
+        {% endif %}
     </div>
     {% csrf_token %}
     <div class="p-3">

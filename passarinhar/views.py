@@ -9,10 +9,10 @@ from django.urls import reverse
 from django.core.paginator import Paginator
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
-
+from django.db.models import Q, F
 from dbm import error
-from .forms import GeoForm, RecentsForm, LocalsForm, SightingForm
-from .models import WUser, Post, Follower, Sighting, Place, Spice, DataZoneSpecie
+from .forms import GeoForm, RecentsForm, LocalsForm, SightingForm, SpiceForm
+from .models import WUser, Post, Follower, Sighting, Place, Spice, DataZoneSpecie, SpeciesTaxonomy, TabFamily
 import folium
 import json
 import os
@@ -38,7 +38,7 @@ def fetch_species_taxonomy(species_code):
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response
-        print(response.json())  
+        # print(response.json())  
         data = response.json()
     return {
         'data': data 
@@ -66,7 +66,7 @@ def fetch_hotspots_nearby(lat, lon, dist = 25, region='BR-RJ-049'):
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response, e.g., 
-        print(response.json())
+        # print(response.json())
         data = response.json()
 
     return {
@@ -118,7 +118,7 @@ def fetch_nearest_observations_of_a_species(species_code, lat, lon, dist= 50, ba
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response, e.g., 
-        print(response.json())         
+        #print(response.json())         
         data = response.json()
     return {
         'data': data 
@@ -150,7 +150,7 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dis
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response, e.g., 
-        print(response.json())    
+        # print(response.json())    
         data = response.json()
     return {
         'data': data 
@@ -187,19 +187,57 @@ def allplaces(request):
 def allspices(request):    
     error = None
     page_obj = None
-    allspices = Spice.objects.all()
-    allspices = allspices.order_by("-pk").all()      
-    if allspices:       
-        p = Paginator(allspices, 30)
-        page_number = request.GET.get('page')
-        page_obj = p.get_page(page_number)        
+    page_number = request.GET.get('page')
+    selected_name = ''
+    selected_family = ''
+    
+    if request.method == 'POST':
+        form = SpiceForm(request.POST)
+        if form.is_valid():
+            selected_name = form.cleaned_data['spice']
+            selected_family = form.cleaned_data['family']                  
+    else:  
+        title = "Especies Registradas"         
+        form = SpiceForm()        
+       
+    
+    if selected_name !='':    
+        allspices = Spice.objects.filter(name__icontains=selected_name)            
+        title = f"Especies {selected_name}* registradas"
+            
+    elif selected_family != '':
+        #bird_families = DataZoneSpecie.objects.filter(Family=selected_family)             
+        #allspices = Spice.objects.filter(taxon_order__family__in=bird_families)   
+        
+        bird_families = TabFamily.objects.filter(en=selected_family)             
+        #print(selected_family, bird_families[0].pt_BR, bird_families[0].taxon_order_end, bird_families[0].taxon_order_begin)
+        if bird_families:            
+            try:
+                taxon = SpeciesTaxonomy.objects.filter(taxon_order__range = (bird_families[0].taxon_order_begin, bird_families[0].taxon_order_end))
+            except SpeciesTaxonomy.DoesNotExist:
+                # Handle the case where the object doesn't exist
+                taxon = None
+            #print(taxon)
+            allspices = Spice.objects.filter(taxon_order__in=taxon)         
+            #allspices = Spice.objects.filter(DTScientific_name__in=bird_families)            
+            title = f"Especies de {bird_families[0].pt_BR} registradas"
+        else:
+            allspices = Spice.objects.all()      
+            title = "Todas as especies registradas"
     else:
-        error = 'Sem dados'
-        page_obj = None
+        allspices = Spice.objects.all()      
+        title = "Todas as especies registradas"
+    allspices = allspices.order_by("name").all()      
+    if allspices:   
+        p = Paginator(allspices, 10)        
+        page_obj = p.get_page(page_number)     
+        print(f'pagenumber {page_number}')   
+    else:
+        error = 'Sem dados'               
     
     return render(request, "passarinhar/spices.html", {
-        'title':"Especies Registradas",
-        'spices': allspices,
+        'title':title,
+        'form': form,
         'page_obj':page_obj,
         "error": error
         })
@@ -307,7 +345,7 @@ def hotspots_nearby_view(request):
                 #longitude = request.POST["lon"]    
                 longitude = request.session['crnt-lon']          
 
-            print(latitude,longitude, dist)
+            # print(latitude,longitude, dist)
             hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
 
             if len(hotspots_nearby_data['data']) == 0 :
@@ -461,17 +499,37 @@ def bird_of_the_day_view(request):
        return JsonResponse({'error': str(e)})
 
 def taxonomy_view(request):
-    try:         
+
+    try:        
         if request.headers.get('content-type') == 'application/json':      
             data = json.loads(request.body)    
             species_code = data.get('species_code','')
-
             taxonomy_data = fetch_species_taxonomy(
                 species_code
             ) 
-            if len(taxonomy_data['data']) > 0 :     
+
+            if len(taxonomy_data['data']) > 0 :   
+                pt_BR_family = ''
+                taxon_order = taxonomy_data['data'][0]['taxonOrder']
+                #taxon_order = float(taxonomy_data['data'][0]['taxonOrder'])
+                print(f'taxon_order: {taxon_order}')
+                try:
+                    print(f'Q: {Q(taxon_order_begin__lte=taxon_order) & Q(taxon_order_end__gte=taxon_order)}')
+                    bird_families = TabFamily.objects.filter(
+                        Q(taxon_order_begin__lte=taxon_order) & 
+                        Q(taxon_order_end__gte=taxon_order))
+                    print(f'bird_families: {bird_families}')
+                    if len(bird_families) > 0:
+                        pt_BR_family = bird_families[0].pt_BR
+                        print(f'bird_families: {bird_families[0].taxon_order_begin}: {bird_families[0].taxon_order_end} pt_BR_family: {pt_BR_family}')
+                    else:
+                        pt_BR_family = ''
+                except Exception as e:
+                    print(f'error: {e}')
+
                 return JsonResponse({
                     'data': taxonomy_data['data'],
+                    'pt_BR_family': pt_BR_family
                     }, content_type='application/json') 
             else:
                 return JsonResponse({'error': 'Nenhuma taxonomia encontrada!'})
@@ -551,10 +609,18 @@ def addNewSpice(request):
                 except DataZoneSpecie.DoesNotExist:
                     # Handle the case where the object doesn't exist
                     spice = None
+                
+                taxon_spice_code = spice_code
+                try:
+                    taxon = SpeciesTaxonomy.objects.get(species_code=taxon_spice_code)
+                except SpeciesTaxonomy.DoesNotExist:
+                    # Handle the case where the object doesn't exist
+                    taxon = None
 
                 new_spice = Spice(
                 spice_code=spice_code,
                 name=name,                
+                taxon_order=taxon,
                 scientific_name=scientific_name,
                 DTScientific_name = spice,
                 description=description,
@@ -867,8 +933,8 @@ def profile(request, username):
     
     # number of people that the user follows.    
     author = Follower.objects.filter(user = profile)
-    following = Follower.objects.filter(user__in=author.values_list("following", flat=True)).count()    
-
+    #following = Follower.objects.filter(user__in=author.values_list("following", flat=True)).count()    
+    following = Follower.objects.filter(following__in=author.values_list("following", flat=True)).count()    
     current_user = request.user
     inFollowingList = Follower.objects.filter(user=current_user.id, following=profile).count()
     if inFollowingList:

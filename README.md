@@ -69,3 +69,16 @@ https://datazone.birdlife.org/site/factsheet/20213-regi%C3%A3o-serrana-do-rio-de
 https://datazone.birdlife.org/species/factsheet/giant-antshrike-batara-cinerea#Taxonomy
 https://birdsoftheworld.org/bow/species/giaant2/cur/introduction?login
 https://icons.getbootstrap.com/
+
+# folium
+
+
+
+LOAD DATA LOCAL INFILE '/path/to/your_file.csv'
+INTO TABLE your_table
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+LOAD DATA LOCAL INFILE '/home/maria/CS50/species-filter-results.csv'
+ 
+ .import --skip 1 -v /home/maria/CS50/species_group.csv  passarinhar_tabfamily

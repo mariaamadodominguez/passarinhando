@@ -5,8 +5,11 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
 
     var en_url = "https://en.wikipedia.org/w/api.php";
     var pt_url = "https://pt.wikipedia.org/w/api.php";
-    // var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)";
-    var titles = comName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + sciName;
+    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;
+    //var titles = norm_comName + "|" + norm_comName + " (ave)|" + sciName;
+    //comName + "|" +
+    //var titles = comName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    //console.log(comName);
 
     var params = new URLSearchParams({
         action: "query",
@@ -16,7 +19,7 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
         format: "json",
         origin: "*"
     });
-    // console.log(`${pt_url}?${params}`)
+
     await fetch(`${pt_url}?${params}`)
         .then(response => response.json())
         .then(res => {
@@ -25,16 +28,18 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
                 pageData = res.query.pages[Object.keys(res.query.pages)[i]];
                 if (pageData.thumbnail) {
                     img_url = pageData.thumbnail.source
-                    // console.log(i, pageData, img_url)
-                    break;
+                    console.log(i, pageData, img_url)
+                    if (i > 3)
+                        break;
                 }
             }
-
+            console.log(`pt_titles ${titles}`)
         })
         .catch(
             (error) => console.error('Error:', error)
         );
     if (img_url == "") {
+
         if (enComName == '')
             titles = sciName
         else
@@ -47,7 +52,7 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
             format: "json",
             origin: "*"
         });
-        // console.log(`${en_url}?${params}`)
+
         await fetch(`${en_url}?${params}`)
             .then(response => response.json())
             .then(data => {
@@ -58,12 +63,14 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
                         // console.log(en_url, i, pageData, img_url)
                     }
                 }
+                console.log(`en_titles-${titles}`)
             })
             .catch(
                 (error) => console.error('Error:', error)
             );
     }
     if (img_url == "") {
+
         img_url = 'https://upload.wikimedia.org/wikipedia/commons/8/8e/No_free_image_bird-he.png'
     }
     return img_url;
@@ -115,14 +122,14 @@ export const getCurrentLocation = async () => {
     }
 }
 
-export const getTaxonomy = (spice_code) => {
+export const getTaxonomy = async (spice_code) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/taxonomy_view';
     var selector = `#spice-taxo${spice_code}`;
 
     document.querySelector(selector).innerHTML = "";
     // console.log('Taxonomy spice_code', selector)
-    fetch(url, {
+    await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -135,7 +142,10 @@ export const getTaxonomy = (spice_code) => {
         .then(response => response.json())
         .then(res => {
             const data = res.data
-            // console.log('Taxon data:', data);
+            const pt_BR_family = res.pt_BR_family
+            //console.log('Taxon res:', res);
+            //console.log('Taxon data:', data);
+            //console.log('pt_BR_family:', pt_BR_family);
 
             const sciName = document.createElement('li');
             var txtSciName = `Nome científico: ${data[0].sciName} `;
@@ -155,7 +165,8 @@ export const getTaxonomy = (spice_code) => {
             document.querySelector(selector).append(family);
 
             const family2 = document.createElement('li');
-            var txtFamily2 = data[0].familyComName;
+            //var txtFamily2 = data[0].familyComName;
+            var txtFamily2 = pt_BR_family;
             family2.innerHTML = txtFamily2;
             document.querySelector(selector).append(family2);
 

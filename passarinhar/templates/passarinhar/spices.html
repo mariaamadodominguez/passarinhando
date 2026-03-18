@@ -8,28 +8,40 @@
 {% else %}
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        {{form.as_p}}
+    </div class="form-group">
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Procurar</button>
+    </div>
+</form>
+{% if page_obj %}
 <nav aria-label="Page navigation">
     <ul class="pagination">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page=1"><span aria-hidden="true">&laquo; </span>First</a></li>
+        <li class="page-item"><a class="page-link" href="?page=1"><span aria-hidden="true">&laquo;</span>Primeira</a>
+        </li>
         <li class="page-item"><a class="page-link"
                 href="?page={{ page_obj.previous_page_number }}">{{page_obj.previous_page_number }}</a></li>
         {%endif %}
 
         <li class="page-item  active" aria-current="page"><a class="page-link"
                 href="?page={{ page_obj.number }}">{{page_obj.number }}</a></li>
-        {% if page_obj.has_next %}
 
+        {% if page_obj.has_next %}
         <li class="page-item"><a class="page-link"
                 href="?page={{ page_obj.next_page_number }}">{{page_obj.next_page_number }}</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last<span
+        <li class="page-item"><a class="page-link" href="?page={{page_obj.paginator.num_pages}}">Última<span
                     aria-hidden="true"> &raquo;</span></a></li>
         {% endif %}
     </ul>
 
 </nav>
-{% for spice in spices %}
+{% endif %}
 
+{% for spice in page_obj %}
 <div class="p-1 my-1 bg-white text-dark border border-secondary">
     <div id='spice-div{{spice.id}}' style="display:block" class="my-1">
         <img class="img-responsive" src="{{ spice.image.thumbnails.small.url}}">
@@ -45,13 +57,12 @@
             <h5 class="text-capitalize">Distribuição</h5>
             {% csrf_token %}
             <div id="spice-map{{spice.spice_code}}">{{ spice_map|safe }}</div>
-
         </div>
-
     </div>
 </div>
+{% empty %}
+<div>*** Nenhum registro ainda***</div>
 {% endfor %}
-
 
 {% block script %}
 <script type="module" src="{% static 'passarinhar/spices.js' %}"></script>

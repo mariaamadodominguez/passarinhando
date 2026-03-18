@@ -1,5 +1,5 @@
 from django import forms
-from .models import Spice, Place, DataZoneSpecie
+from .models import Spice, Place, DataZoneSpecie, TabFamily
 
 ORDER_CHOICES = [
     ('D', 'Por data'),
@@ -70,3 +70,22 @@ class SightingForm(forms.Form):
     place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=True, label='', empty_label="(Selecione o local)")
     description =  forms.CharField(widget=forms.Textarea(attrs={'max_length':'120', "rows":"4",'class': 'form-control', 'placeholder': 'Descreva o avistamento'}), label='')
   
+class SpiceForm(forms.Form):    
+    spice =  forms.CharField(widget=forms.TextInput(attrs={'max_length':'64','class':'form-control','placeholder': 'Espécie'}), label="", required=False )    
+    #unique_families = DataZoneSpecie.objects.values_list('Family').distinct()    
+    #family = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset=unique_families, )        
+    family = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control'}),  
+        label="Família",      
+        required=False,        # Makes field optional
+        choices=[], # Initialize with empty choices        
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the choices dynamically in the constructor
+        qs = TabFamily.objects.values_list('en', 'pt_BR').distinct()
+        qs = list(qs)
+        qs.insert(0, ('', '---'))
+        self.fields['family'].choices = qs
+        #self.fields['family'].choices.insert(0, ('', '---'))

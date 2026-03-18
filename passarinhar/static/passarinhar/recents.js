@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     radioButtons.forEach(radio => {
         radio.addEventListener('click', function () {
             // This code runs immediately when a selection is changed
-            console.log('Radio button selected:', this.value);
+            // console.log('Radio button selected:', this.value);
             switch (this.value) {
                 case 'L': // Local
                     placeField.style.display = 'block';
@@ -38,30 +38,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    const procRadio = document.querySelector('input[name="tipo_procura"]:checked');
+    const procRadio = document.querySelector('input[name="tipo_procura"]');
     if (procRadio) {
-        console.log(procRadio.value)
-        procRadio.click();
-        if (procRadio.value == '') {
-            procRadio.focus();
-            //procRadio.click();
-        }
-        if (procRadio.value == 'R') {
-            placeField.style.display = 'none';
-            placeField.required = false;
+        if (procRadio.checked) {
+            if (procRadio.value == 'R') {
+                placeField.style.display = 'none';
+                placeField.required = false;
+            } else {
+                placeField.style.display = 'block';
+                placeField.required = true;
+            }
         } else {
-            placeField.style.display = 'block';
-            placeField.required = true;
+            procRadio.click();
+            procRadio.focus();
         }
     }
-    const orderRadio = document.querySelector('input[name="tipo_ordem"]:checked');
-    if (orderRadio) {
-        console.log(orderRadio.value)
+    const orderRadio = document.querySelector('input[name="tipo_ordem"]');
+    if (orderRadio && !orderRadio.checked) {
         orderRadio.click();
-        if (orderRadio.value == '') {
-            orderRadio.focus();
-
-        }
     }
 }
 )
@@ -72,7 +66,7 @@ const displayBirdImg = async (img) => {
     const url = '/get_data_zone_specie';
     var enCommon_name = '';
     const sciName = img.alt;
-    const ptCommon_name = img.src;
+    const ptCommon_name = img.id;
     var bird;
     await fetch(url, {
         method: 'POST',

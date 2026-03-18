@@ -83,6 +83,23 @@ class Comment(models.Model):
     comment = models.TextField()
     def serialize(self):
         return f" Comment  {self.post} (by {self.author.username})"    
+class TabFamily(models.Model):
+    pt_BR = models.CharField(max_length=64, blank=True)
+    en = models.CharField(max_length=64, blank=True)
+    spp_group_id = models.CharField(max_length=64, blank=True)
+    species_code_begin = models.CharField(max_length=64, blank=True)
+    species_code_end = models.CharField(max_length=64, blank=True)
+    taxon_order_begin = models.FloatField(blank=True)
+    taxon_order_end = models.FloatField(blank=True)
+    def __str__(self):
+        return self.pt_BR
+
+class SpeciesTaxonomy(models.Model):
+    taxon_order = models.IntegerField(blank=True)
+    species_code = models.CharField(max_length=64, blank=True)
+    def __str__(self):
+        return self.species_code
+    
 
 class DataZoneSpecie(models.Model):
     SIS_ID  = models.CharField(max_length=20, blank=True)
@@ -113,9 +130,10 @@ class Spice(models.Model):
     name = models.CharField(max_length=64, unique=True)
     spice_code = models.CharField(max_length=20, null=True, blank=True)    
     scientific_name = models.CharField(max_length=64, null=True, blank=True)
+    taxon_order = models.ForeignKey(SpeciesTaxonomy, on_delete=models.CASCADE,null=True, blank=True, related_name="spice_taxon_order") 
     DTScientific_name = models.ForeignKey(DataZoneSpecie, on_delete=models.CASCADE,null=True, blank=True, related_name="spice") 
     description = models.TextField(blank=True)
-    url_spice_img  = models.URLField(blank=True)
+    url_spice_img  = models.URLField(max_length=300, blank=True)
     image = ImageField(upload_to='spice_images/', pregenerated_sizes=["small", "medium"], null=True)
     
     @property

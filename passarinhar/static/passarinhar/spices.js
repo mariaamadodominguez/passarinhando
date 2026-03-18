@@ -1,7 +1,7 @@
 import { getRLCategory } from './utils.js';
 import { getTaxonomy } from './utils.js';
 document.addEventListener('DOMContentLoaded', () => {
-    var btns_collection = Array.from(document.getElementsByClassName('btn'));
+    var btns_collection = Array.from(document.getElementsByClassName('btn-info'));
     btns_collection.forEach(_btn => {
         document.getElementById(_btn.id).addEventListener('click', () =>
             showDetails(_btn.id));
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showDetails(spice_id) {
         var selector = `#spice-view${spice_id}`
         var parentselector = `#spice-div${spice_id}`
-        console.log(selector, parentselector, document.querySelector(selector).style.display)
+        // console.log(selector, parentselector, document.querySelector(selector).style.display)
 
         if (document.querySelector(selector).style.display == 'flex') {
             document.querySelector(selector).style.display = 'none';
@@ -45,10 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSpiceMap(spice_code) {
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const url = '/spice_map_view'
-        //console.log('spice_code', spice_code, sessionStorage.lat, sessionStorage.lon)
+        // console.log('spice_code', spice_code, sessionStorage.lat, sessionStorage.lon)
         var selector = `#spice-map${spice_code}`
         document.querySelector(selector).innerHTML = 'Carregando...'
-        //console.log(document.querySelector(selector))
+        // console.log(document.querySelector(selector))
         fetch(url, {
             method: 'POST',
             headers: {
