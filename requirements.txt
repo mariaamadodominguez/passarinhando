@@ -1,0 +1,8 @@
+## Requirements with Version Specifiers ######
+Django==4.2.11
+requests==2.31.0
+requests-file==1.5.1
+python-dotenv==1.0.1
+django-thumbnails==0.8.0
+folium==0.20.0
+querystring_tag==1.2.1

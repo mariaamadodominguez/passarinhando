@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 placeField.required = true;
             }
         } else {
-            procRadio.click();
-            procRadio.focus();
+            //procRadio.click();
+            //procRadio.focus();
         }
     }
     const orderRadio = document.querySelector('input[name="tipo_ordem"]');
     if (orderRadio && !orderRadio.checked) {
-        orderRadio.click();
+        //   orderRadio.click();
     }
 }
 )

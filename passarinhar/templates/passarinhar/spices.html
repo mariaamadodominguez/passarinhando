@@ -50,11 +50,10 @@
     </div>
     <button type="submit" id='{{spice.id}}' class="btn btn-info">Info</button>
     <div id="spice-view{{spice.id}}" class="row" style="display:none">
-        <div class="col-5">
+        <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
             {% include 'passarinhar/components/spice_card.html' with spice=spice %}
         </div>
-        <div class="col-7">
-            <h5 class="text-capitalize">Distribuição</h5>
+        <div class="col-lg-8 col-md-9 col-sm-6 col-xs-12">
             {% csrf_token %}
             <div id="spice-map{{spice.spice_code}}">{{ spice_map|safe }}</div>
         </div>

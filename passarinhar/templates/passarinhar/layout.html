@@ -5,45 +5,63 @@
 
 <head>
     <title>{% block title %}Passarinhar{% endblock %}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <link href="{% static 'passarinhar/styles.css' %}" rel="stylesheet">
     <link rel="shortcut icon" href="#">
 </head>
 
 <body>
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'passarinhar:index' %}">Passarinhar</a>
-    </div>
-    <nav id="menu" class="container navbar navbar-expand-lg">
-        <ul class="nav navbar-nav mr-auto">
-            <li class="nav-item"><a class="nav-link" id="ebird-sights"
-                    href="{% url 'passarinhar:recents'%}">Avistamentos [eBird]</a>
-            </li>
-            <li class="nav-item"><a class="nav-link" id="ebird-places" href="{% url 'passarinhar:locals'%}">Locais
-                    [eBird]</a></li>
-            <li class="nav-item"><a class="nav-link" id='geo-loc' href="{% url 'passarinhar:geo_view' %}">Geo
-                    localização</a></li>
-            <li class="nav-item"><a class="nav-link" id="all-spices"
-                    href="{% url 'passarinhar:allspices' %}">Especies</a></li>
-            <li class="nav-item"><a class="nav-link" id="all-sights"
-                    href="{% url 'passarinhar:allsightings' %}">Passarinhadas</a></li>
-            <li class="nav-item"><a class="nav-link" id="all-places" href="{% url 'passarinhar:allplaces' %}">Locais de
-                    passarinhada</a>
-            </li>
-            {% if user.is_authenticated %}
-            <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a></li>
-            <li class="nav-item"><a class="nav-link" id="user"
-                    href="{% url 'passarinhar:profile' user.username %}">{{user.username}}</a></li>
-
-            <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout' %}">Sair</a></li>
-            {% else %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a></li>
-            {% endif %}
-        </ul>
+    <nav id="menu" class="navbar navbar-expand-md navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'passarinhar:index' %}">Passarinhar</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbardrop1" data-toggle="dropdown">
+                            Passarinhadas
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" id="all-sights"
+                                href="{% url 'passarinhar:allsightings' %}">Avistamentos</a>
+                            <a class="dropdown-item" id="all-places" href="{% url 'passarinhar:allplaces' %}">Locais</a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbardrop2" data-toggle="dropdown">
+                            eBird
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" id="ebird-sights"
+                                href="{% url 'passarinhar:recents'%}">Avistamentos</a>
+                            <a class="dropdown-item" id="ebird-places" href="{% url 'passarinhar:locals'%}">Locais</a>
+                        </div>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" id="geo-loc" href="{% url 'passarinhar:geo_view' %}">Geo
+                            localização</a></li>
+                    <li class="nav-item"><a class="nav-link" id="all-spices"
+                            href="{% url 'passarinhar:allspices' %}">Especies</a></li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" id="allpost" href="{% url 'passarinhar:foro' %}">Foro</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" id="user"
+                            href="{% url 'passarinhar:profile' user.username %}">{{user.username}}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:logout'%}">Sair</a></li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'passarinhar:login' %}">Entrar</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </nav>
 
     <div class="container body">

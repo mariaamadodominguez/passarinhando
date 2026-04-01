@@ -6,9 +6,10 @@
 
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 
-<div id="current" class="row">
+<div id="current" class="row p-1 my-1">
     {% csrf_token %}
-    <div class="col-4" id="bird-of-the-day">
+
+    <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12" id="bird-of-the-day">
         <h3 id="common-name" class="text-capitalize"></h3>
         <img class="img-responsive" id="bird-img" src="#" alt="com_name wiki image">
         <ul class="p-1 my-1">
@@ -19,7 +20,7 @@
         </ul>
     </div>
 
-    <div class="col-8" id="debossan">
+    <div class="col-lg-8 col-md-9 col-sm-6 col-xs-12" id="debossan">
         <!--a
             href="https://datazone.birdlife.org/search?cameraPosition=-43.49999349574768,-22.787594405218314,-41.44229306230019,-21.973820333629448&sitesEnabled=true&protectedAreasEnabled=false&limitSites=false&isSiteMap=true&site=20213">
             Região Serrana do rio de janeiro - Areas protegidas</a-->

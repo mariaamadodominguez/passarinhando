@@ -93,7 +93,7 @@ def fetch_recent_nearby_notable_observations(lat, lon, dist = 250, back = 30, de
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response, e.g., 
-        print(response.json())    
+        # print(response.json())    
         data = response.json()
     return {
         'data': data 
@@ -118,7 +118,7 @@ def fetch_nearest_observations_of_a_species(species_code, lat, lon, dist= 50, ba
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response, e.g., 
-        #print(response.json())         
+        # print(response.json())         
         data = response.json()
     return {
         'data': data 
@@ -130,7 +130,7 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dis
     data = ''
     if lat == '':
         # print('fetch_recent_observations_in_a_region')
-        url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}"
+        url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}&detail=full"
     else:
         # print('fetch_recent_observations_in_a_LoC')
         url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sort={sort}&dist={dist}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
@@ -164,7 +164,7 @@ def allplaces(request):
         
     if allplaces:
         allplaces = allplaces.order_by("-pk").all()   
-        p = Paginator(allplaces, 30)
+        p = Paginator(allplaces, 10)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
         hotspots_nearby_data = page_obj    
@@ -179,7 +179,6 @@ def allplaces(request):
         'title':"Locais de Avistamento Registrados",
         "page_name": 'allplaces',        
         'page_obj':page_obj,
-        "hotspots_nearby_data": hotspots_nearby_data,
         "nearby_map":map_html,
         "error": error
         })
@@ -199,18 +198,14 @@ def allspices(request):
     else:  
         title = "Especies Registradas"         
         form = SpiceForm()        
-       
-    
+           
     if selected_name !='':    
         allspices = Spice.objects.filter(name__icontains=selected_name)            
         title = f"Especies {selected_name}* registradas"
             
     elif selected_family != '':
-        #bird_families = DataZoneSpecie.objects.filter(Family=selected_family)             
-        #allspices = Spice.objects.filter(taxon_order__family__in=bird_families)   
         
         bird_families = TabFamily.objects.filter(en=selected_family)             
-        #print(selected_family, bird_families[0].pt_BR, bird_families[0].taxon_order_end, bird_families[0].taxon_order_begin)
         if bird_families:            
             try:
                 taxon = SpeciesTaxonomy.objects.filter(taxon_order__range = (bird_families[0].taxon_order_begin, bird_families[0].taxon_order_end))
@@ -219,7 +214,6 @@ def allspices(request):
                 taxon = None
             #print(taxon)
             allspices = Spice.objects.filter(taxon_order__in=taxon)         
-            #allspices = Spice.objects.filter(DTScientific_name__in=bird_families)            
             title = f"Especies de {bird_families[0].pt_BR} registradas"
         else:
             allspices = Spice.objects.all()      
@@ -267,14 +261,15 @@ def favourites(request):
     error = None
     crntlat = request.session["crnt-lat"]
     crntlon = request.session["crnt-lon"]
+    
     # Filter places returned based on favourites:
     user = WUser.objects.filter(id = request.user.id)    
     fav_places = Place.objects.filter(id__in=user.values_list("favouritesList", flat=True))  
-                      
+    
     # Return all user favourite places in reverse chronologial order
     fav_places = fav_places.order_by("-pk").all()
     if fav_places:    
-        p = Paginator(fav_places, 30)
+        p = Paginator(fav_places, 10)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
     
@@ -327,35 +322,32 @@ def hotspots_nearby_view(request):
     error = None
     home_map = None
     map_html = None
-    if request.method == 'POST':
-        form = LocalsForm(request.POST)
-        if form.is_valid():
-            
-            dist = request.POST['dist']        
-            # back = request.POST['back']        
-            selected_value = form.cleaned_data['tipo_procura']  
-            place_object = form.cleaned_data['place']            
+    page_obj = None
+    form = LocalsForm(request.GET)
+    if form.is_valid():
+        dist = request.GET['dist']        
+        selected_value = form.cleaned_data['tipo_procura']  
+        place_object = form.cleaned_data['place']            
                            
-            if selected_value == 'L': # local subnational2 code.                                
-                latitude = place_object.lat
-                longitude = place_object.lon                
-            else : # selected_value == 'R''- nearby)  
-                #latitude = request.POST["lat"]
-                latitude = request.session['crnt-lat']
-                #longitude = request.POST["lon"]    
-                longitude = request.session['crnt-lon']          
+        if selected_value == 'L': # local subnational2 code.                                
+            latitude = place_object.lat
+            longitude = place_object.lon                
+        else : # selected_value == 'R''- nearby)  
+            latitude = request.session['crnt-lat']
+            longitude = request.session['crnt-lon']          
 
-            # print(latitude,longitude, dist)
-            hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
+        hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
 
-            if len(hotspots_nearby_data['data']) == 0 :
-                error = 'Nenhum local encontrado!' 
-            else:
-                hotspots_nearby_data = hotspots_nearby_data['data']
-                home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
-                map_html = home_map._repr_html_()                      
-        else:  
-            pass
+        if len(hotspots_nearby_data['data']) == 0 :
+            error = 'Nenhum local encontrado!' 
+            hotspots_nearby_data = None
+        else:
+            hotspots_nearby_data = hotspots_nearby_data['data']
+            home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
+            map_html = home_map._repr_html_()   
+            p = Paginator(hotspots_nearby_data, 10)
+            page_number = request.GET.get('page')
+            page_obj = p.get_page(page_number)                   
     else:
         form = LocalsForm()      
 
@@ -363,14 +355,17 @@ def hotspots_nearby_view(request):
             "title":'Locais de avistamento na região',
             "form": form,
             "error":error,
-            "hotspots_nearby_data": hotspots_nearby_data,
-            "nearby_map":map_html
+            "nearby_map":map_html,
+            "page_obj":page_obj
         })
 
 def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
     kw_bird = {"prefix": "fa", "color": "green", "icon": "crow"}
     kw_house = {"prefix": "fa", "color": "blue", "icon": "house"}
     kw = {"color": "blue"}    
+    headers = {
+    "User-Agent": "PAssarinhar/1.0 (contact: mardomngz@gmail.com)"
+    }
     if type == "favourite" or type == "allplaces":
         locName_list = [item.place for item in nearby] 
         lng_list = [item.lon for item in nearby]
@@ -389,6 +384,7 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
         location=[latitude, longitude], 
         zoom_start=zoom_start,
         control_scale=True,
+        headers=headers
     )       
     
    # instantiate a feature group for the nearby stations in the dataframe
@@ -414,7 +410,6 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
         except:
             pass
         
-
         folium.Marker(
             [lat, lng], 
             popup=label,
@@ -435,14 +430,10 @@ def get_data_zone_specie(request):
     try:
         if request.headers.get('content-type') == 'application/json':      
             data = json.loads(request.body)    
-            print(f'data_zone_specie(data): {data}' )
             DZS_name = data.get('DZS_name','')
-            print(f'get_data_zone_specie(DZS_name): {DZS_name}' )
             bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)                    
-            print({f"bird_data:  {bird_data}"})
             bird = [bird for bird in bird_data] # Or use list(queryset)
             bird = serializers.serialize('json', bird_data)
-            print({f"bird:  {bird}"})
             return JsonResponse({
                 'bird':bird
             }, content_type='application/json') 
@@ -457,14 +448,15 @@ def bird_of_the_day_view(request):
     try:         
         if request.headers.get('content-type') == 'application/json':      
             data = json.loads(request.body)    
-            latitude = data.get('lat','')
-            longitude = data.get('lon','')    
+            request.session["crnt-lat"]=data.get('lat','')
+            request.session["crnt-lon"]=data.get('lon','')
             howmany = 1  
             recent_observations_data = fetch_recent_observations_in_a_region(
-                latitude,
-                longitude,
-                howmany
-            ) 
+                request.session["crnt-lat"],
+                request.session["crnt-lon"],
+                howmany,
+                dist=50,sort = 'species'          ) 
+                
             if len(recent_observations_data['data']) > 0 :     
                 # print(recent_observations_data['data'][0]['comName'])
                 latlng = recent_observations_data['data']   
@@ -472,20 +464,14 @@ def bird_of_the_day_view(request):
                 DZS_name=recent_observations_data['data'][0]['sciName']
                 try:
                     bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)
-                    #bird_data = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
-                    #print({f"bird_data:  {bird_data}"})
                     bird = [bird for bird in bird_data] # Or use list(queryset)
                     bird = serializers.serialize('json', bird_data)
-                    #print({f"bird:  {bird}"})
                 except DataZoneSpecie.DoesNotExist:
                     # Handle the case where the object doesn't exist                    
                     print({f"error": "Record {comName} not found."}, status=404)
-                    bird = None                                    
-                    
-                request.session["crnt-lat"]=latitude
-                request.session["crnt-lon"]=longitude
+                    bird = None                                                                        
         
-                home_map = show_on_map(latitude, longitude, "bird", latlng, zoom_start = 10)
+                home_map = show_on_map(request.session["crnt-lat"], request.session["crnt-lon"], "bird", latlng, zoom_start = 10)
                 map_html = home_map._repr_html_() 
                 return JsonResponse({
                     'data': recent_observations_data['data'],
@@ -511,17 +497,12 @@ def taxonomy_view(request):
             if len(taxonomy_data['data']) > 0 :   
                 pt_BR_family = ''
                 taxon_order = taxonomy_data['data'][0]['taxonOrder']
-                #taxon_order = float(taxonomy_data['data'][0]['taxonOrder'])
-                print(f'taxon_order: {taxon_order}')
                 try:
-                    print(f'Q: {Q(taxon_order_begin__lte=taxon_order) & Q(taxon_order_end__gte=taxon_order)}')
                     bird_families = TabFamily.objects.filter(
                         Q(taxon_order_begin__lte=taxon_order) & 
                         Q(taxon_order_end__gte=taxon_order))
-                    print(f'bird_families: {bird_families}')
                     if len(bird_families) > 0:
                         pt_BR_family = bird_families[0].pt_BR
-                        print(f'bird_families: {bird_families[0].taxon_order_begin}: {bird_families[0].taxon_order_end} pt_BR_family: {pt_BR_family}')
                     else:
                         pt_BR_family = ''
                 except Exception as e:
@@ -602,7 +583,6 @@ def addNewSpice(request):
             if current:
                 message = 'Passarinho já cadastrado.'                                
             else:
-                # DZS_name=scientific_name[:20]
                 DZS_name=scientific_name
                 try:
                     spice = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
@@ -684,68 +664,83 @@ def addNewLocal(request):
 def localrecents(request, lat, lon, place):
     recent_observations_data = None
     error = None
+    page_number = request.GET.get('page')                      
     max_views = 30   
-    #current = Place.objects.filter(lat=lat, lon=lon)
-    #if current:
-    #    title = f"Avistamentos recentes perto de {current[0].place}"
-    #else:
-    #    title = f"Avistamentos recentes em {lat}, {lon}"
-    title = f"Avistamentos recentes perto de {place}"
-    recent_observations_data = fetch_recent_observations_in_a_region(
-        lat, lon, max_views
-    )
+    if lat != ' ':
+        recent_observations_data = fetch_recent_observations_in_a_region(lat, lon, max_views, dist=25, sort='species')
+        title = f"Avistamentos recentes perto de {place}"   
+    else:
+        recent_observations_data = fetch_recent_observations_in_a_region('', lon, max_views, region=lon, sort='species')
+        title = f"Avistamentos recentes em {place} (região) {lon}"
     if len(recent_observations_data['data']) == 0 :
+        page_obj = None
         error = 'Nenhuma observação recente encontrada!'
+    else:
+        p = Paginator(recent_observations_data['data'], 10)                
+        page_obj = p.get_page(page_number)
     return render(request, "passarinhar/recentes.html", {
             "title":title,
             "error":error,
-            "recent_observations_data": recent_observations_data
+            "type_page":'local',            
+            "page_obj":page_obj
                   })
     
 def recent_observations_view(request):
-    title = 'Avistamentos recentes na região'
-    recent_observations_data = None
     error = None
-    if request.method == 'POST':
-        form = RecentsForm(request.POST)
-        if form.is_valid():
-            latitude = request.session["crnt-lat"]
-            longitude = request.session["crnt-lon"]                
-            howmany = request.POST['quantos']    
-            dist = request.POST['dist']    
-                    
-            selected_value = form.cleaned_data['tipo_procura']  
-            place_object = form.cleaned_data['place']      
-            order_type = form.cleaned_data['tipo_ordem']  
-            if order_type == 'D':
-                sort_value ='date'
+    page_obj = None    
+    howmany = None
+    
+    latitude = request.session["crnt-lat"]
+    longitude = request.session["crnt-lon"]                
+    title = 'Avistamentos recentes na região'
+    form = RecentsForm(request.GET)
+    print(request.method, form.is_valid())
+    if form.is_valid():
+        howmany = int(form.cleaned_data['quantos'])
+        dist = int(form.cleaned_data['dist'])
+        selected_value = form.cleaned_data['tipo_procura']  
+        place_object = form.cleaned_data['place']      
+        order_type = form.cleaned_data['tipo_ordem']  
+          
+        if order_type == 'D':
+            sort_value ='date'
+        else:
+            sort_value = 'species'
+        if selected_value == 'N':                
+            title = f"Avistamentos notáveis perto de {place_object.place}"                 
+            recent_observations_data = fetch_recent_nearby_notable_observations(latitude,longitude, dist)
+        else :
+            if selected_value == 'L': # local 
+                title = f"Avistamentos recentes perto de {place_object.place}"
+                latitude = place_object.lat
+                longitude = place_object.lon                                    
+            else:                     # nearby)  
+                title = 'Avistamentos recentes na região'                        
+            recent_observations_data = fetch_recent_observations_in_a_region(latitude,longitude,howmany, sort_value, dist)                                
+
+        if len(recent_observations_data['data']) == 0 :
+            error = 'Nenhuma observação recente encontrada!'           
+        else:
+            p = Paginator(recent_observations_data['data'], 10)                
+            if request.method == 'POST':
+                page_obj = p.get_page(1)                
             else:
-                sort_value = 'species'
-            if selected_value == 'N':                
-                title = f"Avistamentos notáveis perto de {place_object.place}"                 
-                recent_observations_data = fetch_recent_nearby_notable_observations(latitude,longitude, dist)
-            else :
-                if selected_value == 'L': # local 
-                    title = f"Avistamentos recentes perto de {place_object.place}"
-                    latitude = place_object.lat
-                    longitude = place_object.lon                                    
-                else:                     # nearby)  
-                    latitude = request.session['crnt-lat']                    
-                    longitude = request.session['crnt-lon']          
-
-                recent_observations_data = fetch_recent_observations_in_a_region(
-                    latitude,longitude,howmany, sort_value, dist)                                
-
-            if len(recent_observations_data['data']) == 0 :
-                error = 'Nenhuma observação recente encontrada!'           
-    else:  
-        form = RecentsForm()      
-    return render(request, "passarinhar/recentes.html", {
+                page_obj = p.get_page(request.GET.get('page'))                
+        return render(request, "passarinhar/recentes.html", {
             "title": title,
             "form": form,
-            "error":error,
-            "recent_observations_data": recent_observations_data
-                  })
+            "error":error,            
+            "type_page":'recentes',            
+            "page_obj":page_obj
+            })
+    else:
+        return render(request, "passarinhar/recentes.html", {
+            "title": 'Avistamentos recentes na região',
+            "form": RecentsForm(),
+            "error":'',
+            "type_page":'recentes',            
+            "page_obj":None
+            })
 
 def mysightings(request):      
     mysightings = Sighting.objects.filter(birder=request.user)

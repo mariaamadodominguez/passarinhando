@@ -1,6 +1,6 @@
 {% extends "passarinhar/layout.html" %}
 {% load static %}
-
+{% load querystring_tag %}
 {% block body %}
 <h2 id="page-title">{{ title }}</h2>
 
@@ -10,7 +10,7 @@
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
 
-<form method="post">
+<form method="get">
     {% csrf_token %}
     <div class="form-group">
         {{form.as_p}}
@@ -20,15 +20,48 @@
     </div>
 </form>
 
+{% if page_obj %}
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% querystring as qs %}
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="{% querystring source_data=form.cleaned_data page=1 %}">
+                <span aria-hidden="true">&laquo;</span>Primeira</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="{% querystring source_data=form.cleaned_data page=page_obj.previous_page_number %}">
+                {{page_obj.previous_page_number}}</a>
+        </li>
+        {%endif %}
 
-{% if hotspots_nearby_data %}
+        <li class="page-item  active" aria-current="page">
+            <a class="page-link" href="{% querystring source_data=form.cleaned_data page=page_obj.number %}">
+                {{page_obj.number }}</a>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link"
+                href="{% querystring source_data=form.cleaned_data page=page_obj.next_page_number %}">
+                {{page_obj.next_page_number}}</a></li>
+        <li class="page-item"><a class="page-link"
+                href="{% querystring source_data=form.cleaned_data page=page_obj.paginator.num_pages %}">
+                Última<span aria-hidden="true"> &raquo;</span></a></li>
+        {% endif %}
+    </ul>
+
+</nav>
+{% endif %}
+
+{% if page_obj%}
 <div class='container'>
     <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
         <h2 id="folium_map">Mapa</h2>
         {{ nearby_map|safe }}
     </div>
 
-    {% for local in hotspots_nearby_data %}
+    {% for local in page_obj %}
     <div class="p-1 my-1 bg-white text-dark border border-secondary">
         <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
         <div id="coords{{forloop.counter0}}">Coords:
@@ -41,10 +74,13 @@
         {% endif %}
         <div id="recent-obs{{local.locId}}">
             <!--https://api.ebird.org/v2/data/obs/L10838731/recent-->
-            <a href="{% url 'passarinhar:localrecents' local.lat local.lng local.locName%}">Avistamentos recentes</a>
+            <a href="{% url 'passarinhar:localrecents' local.lat local.lng local.locName%}">Avistamentos nas
+                redondezas</a>
         </div>
         <ul>
-            <li>Id. do local: <span id="locId{{forloop.counter0}}">{{local.locId}}</span></li>
+            <li>Id. do local: <span id="locId{{forloop.counter0}}">
+                    <a href="{% url 'passarinhar:localrecents' ' ' local.locId local.locName%}">{{local.locId}}</a>
+                </span></li>
             <li>Código da região: <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
             <li>Última Observação:<span id="latestObsDt{{forloop.counter0}}">{{local.latestObsDt}}</span></li>
             <li>Total Especies: <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>
