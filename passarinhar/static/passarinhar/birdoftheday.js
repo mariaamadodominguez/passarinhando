@@ -1,6 +1,7 @@
 import { searchWikiData } from './utils.js';
 import { getCurrentLocation } from './utils.js';
 import { getRLCategory } from './utils.js';
+import { getXenoCanto } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     async function showBirdofTheDay() {
@@ -48,8 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 getRLCategory(document.querySelector(`#spice-rl`));
 
                 displayBirdImg(data[0], enCommon_name)
+
+
+                const player = document.createElement('div');
+                player.id = `player${data[0].speciesCode}`;
+                document.querySelector('#player').append(player);
                 document.getElementById(`bird-of-the-day`).style.display = "block";
 
+                getXenoCanto(data[0].speciesCode, data[0].sciName)
                 document.getElementById(`debossan`).innerHTML = res.debossan_map;
 
             })

@@ -6,3 +6,4 @@ python-dotenv==1.0.1
 django-thumbnails==0.8.0
 folium==0.20.0
 querystring_tag==1.2.1
+xeno-canto==0.1.2

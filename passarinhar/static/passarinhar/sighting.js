@@ -1,5 +1,6 @@
 import { getRLCategory } from './utils.js';
 import { getTaxonomy } from './utils.js';
+import { getXenoCanto } from './utils.js';
 document.addEventListener('DOMContentLoaded', () => {
     var yesno_collection = Array.from(document.getElementsByClassName('yes-no'));
     yesno_collection.forEach(_yesno => {
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     var rlcat = `#spice-rl${idcat}`
     getRLCategory(document.querySelector(rlcat));
     var spice_code = document.querySelector(`#spice-code${idcat}`).innerHTML;
+    var scientific_name = document.querySelector(`#spice-scientific-name${idcat}`).innerHTML;
     getTaxonomy(spice_code.trim())
+    getXenoCanto(spice_code.trim(), scientific_name.trim())
 
 })

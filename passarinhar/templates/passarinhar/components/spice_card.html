@@ -5,7 +5,10 @@
     <div>
         <h4 class="text-capitalize">{{ spice.name }}</h4>
         <span id="spice-code{{spice.id}}">{{spice.spice_code}}</span>
-        <span> {{spice.DTScientific_name.Common_name}}</span>
+        <span id="spice-common-name{{spice.id}}">{{spice.DTScientific_name.Common_name}}</span>
+        <span id="spice-scientific-name{{spice.id}}">{{spice.scientific_name}}</span>
+        <div id="player{{spice.spice_code}}" class="d-flex flex-column"></div>
+
         <h5 class="text-capitalize">Taxonomia</h5>
         {% csrf_token %}
         <ul id="spice-taxo{{spice.spice_code}}"></ul>

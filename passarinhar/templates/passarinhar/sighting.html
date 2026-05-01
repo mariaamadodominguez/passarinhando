@@ -46,8 +46,9 @@
     <span class="spice col-6" id='{{sighting.spice.id}}'>
         {% include 'passarinhar/components/spice_card.html' with spice=sighting.spice %}
     </span>
-
+    <div id="player{{sighting.spice.spice_code}}" class="d-flex flex-column"></div>
 </div>
+
 {% block script %}
 <script type="module" src="{% static 'passarinhar/sighting.js' %}"></script>
 {% endblock %}

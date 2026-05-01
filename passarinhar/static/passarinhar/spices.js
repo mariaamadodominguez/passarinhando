@@ -1,5 +1,6 @@
 import { getRLCategory } from './utils.js';
 import { getTaxonomy } from './utils.js';
+import { getXenoCanto } from './utils.js';
 document.addEventListener('DOMContentLoaded', () => {
     var btns_collection = Array.from(document.getElementsByClassName('btn-info'));
     btns_collection.forEach(_btn => {
@@ -34,10 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelector(parentselector).style.display = 'none';
             getRLCategory(document.querySelector(rlcat));
-
+            var scientific_name = document.querySelector(`#spice-scientific-name${spice_id}`).innerHTML;
             var spice_code = document.querySelector(`#spice-code${spice_id}`).innerHTML;
+            getXenoCanto(spice_code, scientific_name);
             getTaxonomy(spice_code.trim())
             showSpiceMap(spice_code.trim());
+
 
         }
     }

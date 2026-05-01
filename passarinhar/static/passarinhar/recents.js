@@ -1,4 +1,5 @@
 import { searchWikiData } from './utils.js';
+import { getXenoCanto } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     var save_btns = Array.from(document.getElementsByClassName('save-button'));
@@ -95,6 +96,8 @@ const displayBirdImg = async (img) => {
 
     const img_url = await searchWikiData(ptCommon_name, sciName, enCommon_name);
     document.getElementById(img.id).src = img_url;
+    getXenoCanto(ptCommon_name, sciName);
+
 }
 
 function saveSpice(spice_id) {

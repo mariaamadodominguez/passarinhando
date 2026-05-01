@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 import os   
 load_dotenv()
 EBIRD_API_KEY = os.getenv("EBIRD_API_KEY")  
+XENO_API_KEY = os.getenv("XENO_API_KEY")
 OPEN_WEATHER_KEY = os.getenv("OPEN_WEATHER_KEY")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

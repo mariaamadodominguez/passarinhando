@@ -19,6 +19,40 @@ import os
 import requests
 import urllib.request
 
+def fetch_species_recordings(species_code, lat, lon):
+    apikey = settings.XENO_API_KEY
+    data=''    
+    api_url = f"https://xeno-canto.org/api/3/recordings"
+    if lat != '' and lon != '':
+        params = {
+            'query': f"sp:\"{species_code}\"",
+            'key': apikey,
+            'len':"15-30",
+            'lat': lat,
+            'lon': lon
+        }
+    else:
+        params = {
+            'query': f"sp:\"{species_code}\"",
+            'key': apikey
+        }
+    #https://xeno-canto.org/api/3/recordings?query=gen:larus+sp:fuscus+cnt:brazil&per_page=50&page=3&key=959843e506bd0472c276b482cbde6fa1fc0a6323
+    print(params)
+    try:
+        response = requests.request("GET", api_url, params=params, timeout=5) # timeout to prevent 
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {api_url} is {response.status_code}")
+        # Process the successful response
+        # print(response.json())  
+        data = response.json()
+    
+    # print(data)
+    return data
+
 def fetch_species_taxonomy(species_code):
     api_key = settings.EBIRD_API_KEY
     data=''
@@ -225,7 +259,7 @@ def allspices(request):
     if allspices:   
         p = Paginator(allspices, 10)        
         page_obj = p.get_page(page_number)     
-        print(f'pagenumber {page_number}')   
+        #print(f'pagenumber {page_number}')   
     else:
         error = 'Sem dados'               
     
@@ -364,7 +398,8 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
     kw_house = {"prefix": "fa", "color": "blue", "icon": "house"}
     kw = {"color": "blue"}    
     headers = {
-    "User-Agent": "PAssarinhar/1.0 (contact: mardomngz@gmail.com)"
+    "User-Agent": "PAssarinhar/1.0 (contact: mardomngz@gmail.com)",
+    #"referrer" : "no-referrer-when-downgrade"
     }
     if type == "favourite" or type == "allplaces":
         locName_list = [item.place for item in nearby] 
@@ -386,8 +421,13 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
         control_scale=True,
         headers=headers
     )       
-    
-   # instantiate a feature group for the nearby stations in the dataframe
+    folium.TileLayer(
+        tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+        referrer_policy="no-referrer-when-downgrade",
+    ).add_to(home_map)
+
+    # instantiate a feature group for the nearby stations in the dataframe
     nearby_places = folium.map.FeatureGroup()
     for lat, lng, in zip(lat_list, lng_list):
         nearby_places.add_child(
@@ -423,6 +463,10 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
         ).add_to(home_map)
     # add places to map
     home_map.add_child(nearby_places)
+    # Inject the meta tag into the HTML head
+    #meta_tag = '<meta name="referrer" content="no-referrer">'
+    #home_map.get_root().header.add_child(folium.Element(meta_tag))
+    
     return home_map
 
 def get_data_zone_specie(request):
@@ -443,6 +487,20 @@ def get_data_zone_specie(request):
         print({f"error": "Record {DZS_name} not found."}, status=404)
         return JsonResponse({'error': 'Nenhuma ave encontrada!'})
     
+
+def bird_player_view(request):
+    print('bird_player_view')
+    if request.headers.get('content-type') == 'application/json':      
+        data = json.loads(request.body)    
+        species_code = data.get('species_code','')
+        lat = data.get('lat','')
+        lon = data.get('lon','')
+        #print(species_code, lat, lon)
+        recordings = fetch_species_recordings(species_code, lat, lon)
+        #print(recordings)
+        return JsonResponse({
+            'recordings':recordings
+        }, content_type='application/json') 
 
 def bird_of_the_day_view(request):
     try:         
@@ -817,11 +875,12 @@ def delete_sighting(request, sighting_id):
         currentSighting.delete()          
     except Sighting.DoesNotExist:
         raise Http404("Sighting not found.")
-    return render(request, "passarinhar/sighting.html", {
-        'form': form,
-        "title":f"{currentSighting.common_name}",
-        "sighting": currentSighting,                 
-    })
+    return HttpResponseRedirect(reverse('passarinhar:allsightings'))
+    #return render(request, "passarinhar/sighting.html", {
+    #    'form': form,
+    #    "title":f"{currentSighting.common_name}",
+    #    "sighting": currentSighting,                 
+    #})
 
 def index(request):
     if "crnt-lat" not in request.session:

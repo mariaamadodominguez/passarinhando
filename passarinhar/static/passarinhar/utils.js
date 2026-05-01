@@ -122,6 +122,39 @@ export const getCurrentLocation = async () => {
     }
 }
 
+export const getXenoCanto = async (spice_code, scientific_name) => {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const url = '/bird_player_view';
+    var selector = `#player${spice_code}`;
+    console.log(selector, spice_code, scientific_name)
+    document.querySelector(selector).innerHTML = "";
+    await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken // Include the CSRF token in the headers
+        },
+        body: JSON.stringify({
+            lat: sessionStorage.lat,
+            lon: sessionStorage.lon,
+            species_code: scientific_name
+        })
+    })
+        .then(response => response.json())
+        .then(res => {
+            //console.log('res', res)
+            const recordings = res.recordings.recordings
+            for (var i = 0; i < recordings.length && i < 3; i++) {
+                console.log('recordings', recordings[i].file)
+                const xenoframe = document.createElement('iframe');
+                xenoframe.src = `https://xeno-canto.org/${recordings[i].id}/embed?simple=1`;
+                xenoframe.style.border = "none";
+                xenoframe.style.overflow = "hidden";
+                document.querySelector(selector).append(xenoframe);
+            }
+        })
+
+}
 export const getTaxonomy = async (spice_code) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/taxonomy_view';
