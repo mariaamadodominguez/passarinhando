@@ -28,12 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fu@v!tx$oe1b^@242ru@2j*ptor@(k(5v+lbyb6y5t-6v4=(a*'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['passarinhar.pythonanywhere.com', '127.0.0.1']
 
 
 # Application definition
@@ -138,7 +138,7 @@ AUTH_USER_MODEL = "passarinhar.WUser"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_ROOT = BASE_DIR / 'media'
+#MEDIA_ROOT = BASE_DIR / 'media'
 THUMBNAILS = {
     'METADATA': {
         'PREFIX': 'thumbs',

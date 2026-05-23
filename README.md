@@ -31,7 +31,13 @@ Use eBird's API to recover information about birds and birdwatching locations
     3. notable https://api.ebird.org/v2/data/obs/{{regionCode}}/recent/notable
     4. hotspots https://api.ebird.org/v2/ref/hotspot/geo?lat=-22.36&lng=-42.53&fmt=json
 
+# XenoCanto
+Use XenoCanto's API to recover bird sounds
 
+  * Doc  
+    https://xeno-canto.org/explore/api
+  * Api endpoints
+    1. recordings https://xeno-canto.org/api/2/recordings?query=species:{species_code}
 
 
 # Wikipedia 
@@ -66,7 +72,8 @@ Use Wikimedia's API to recover images
 "pageprops":{"displaytitle":"<i>Penelope</i>","page_image_free":"Penelope_jacquacu01.jpg","wikibase_item":"Q1071983"}  
 }  }  }  }  
 
-
+# OpenWeather
+Use OpenWeather to fetch geodata
 
 # How to run
 

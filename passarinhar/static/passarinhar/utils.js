@@ -28,12 +28,12 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
                 pageData = res.query.pages[Object.keys(res.query.pages)[i]];
                 if (pageData.thumbnail) {
                     img_url = pageData.thumbnail.source
-                    console.log(i, pageData, img_url)
+                    //console.log(i, pageData, img_url)
                     if (i > 3)
                         break;
                 }
             }
-            console.log(`pt_titles ${titles}`)
+            //console.log(`pt_titles ${titles}`)
         })
         .catch(
             (error) => console.error('Error:', error)
@@ -63,7 +63,7 @@ export const searchWikiData = async (comName, sciName, enComName = '') => {
                         // console.log(en_url, i, pageData, img_url)
                     }
                 }
-                console.log(`en_titles-${titles}`)
+                //console.log(`en_titles-${titles}`)
             })
             .catch(
                 (error) => console.error('Error:', error)
@@ -126,7 +126,7 @@ export const getXenoCanto = async (spice_code, scientific_name) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/bird_player_view';
     var selector = `#player${spice_code}`;
-    console.log(selector, spice_code, scientific_name)
+    //console.log(selector, spice_code, scientific_name)
     document.querySelector(selector).innerHTML = "";
     await fetch(url, {
         method: 'POST',
@@ -144,14 +144,15 @@ export const getXenoCanto = async (spice_code, scientific_name) => {
         .then(res => {
             //console.log('res', res)
             const recordings = res.recordings.recordings
-            for (var i = 0; i < recordings.length && i < 3; i++) {
-                console.log('recordings', recordings[i].file)
-                const xenoframe = document.createElement('iframe');
-                xenoframe.src = `https://xeno-canto.org/${recordings[i].id}/embed?simple=1`;
-                xenoframe.style.border = "none";
-                xenoframe.style.overflow = "hidden";
-                document.querySelector(selector).append(xenoframe);
-            }
+            if (recordings)
+                for (var i = 0; i < recordings.length && i < 3; i++) {
+                    //console.log('recordings', recordings[i].file)
+                    const xenoframe = document.createElement('iframe');
+                    xenoframe.src = `https://xeno-canto.org/${recordings[i].id}/embed?simple=1`;
+                    xenoframe.style.border = "none";
+                    xenoframe.style.overflow = "hidden";
+                    document.querySelector(selector).append(xenoframe);
+                }
         })
 
 }

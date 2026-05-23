@@ -12,8 +12,8 @@ RECENT_CHOICES = [
     ('N', 'Avistamentos notaveis'),
 ]
 LOCAL_CHOICES = [    
-    ('L', 'Procurar local ou região'),
     ('R', 'Procurar nas redondezas'),
+    ('L', 'Procurar local ou região'),
 ]
 
 class NewPostForm(forms.Form):      
@@ -30,29 +30,32 @@ class GeoForm(forms.Form):
 
 class LocalsForm(forms.Form):
     tipo_procura = forms.ChoiceField(
-        label='',
+        label='Tipo de Procura',
         choices=LOCAL_CHOICES,
         widget=forms.RadioSelect,
-        help_text="Encontre lugares de destaque de um determinado local ou região, ou próximos a sua localização, dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas."
+        help_text="Encontre lugares de destaque de um determinado local ou região, ou próximos a sua localização, dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas.",
+        initial=LOCAL_CHOICES[0][0]
     )
     place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset=  Place.objects.all(), required=False, label='', empty_label="(Selecione o local)")    
-    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'distance', 'step': "1",'class': 'form-control', 'placeholder': 'radio do local atual Km (max 50)'}), required=True, label='', min_value=1, max_value=50)    
+    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'distance', 'step': "1",'class': 'form-control', 'placeholder': 'Radio do local Km (max 50)'}), required=True, label='Radio', help_text='Radio do local Km (max 50)', min_value=1, max_value=50, initial=15)    
     
 class RecentsForm(forms.Form):
     tipo_procura = forms.ChoiceField(       
-        label='',
+        label='Tipo de Procura',
         choices=RECENT_CHOICES,
         widget=forms.RadioSelect,
-        help_text="Obtenha a lista de observações recentes e notáveis ​​(até 30 dias atrás) de aves avistadas em locais dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas fornecido. Observações notáveis ​​podem se referir a espécies raras local ou nacionalmente, ou a aves incomuns por outros motivos, como, por exemplo, aves invernantes de uma espécie que normalmente só visita o local no verão. Os resultados incluem apenas a observação mais recente para cada espécie na região especificada"        
+        help_text="Obtenha a lista de observações recentes e notáveis ​​(até 30 dias atrás) de aves avistadas em locais dentro de um raio de até 50 quilômetros, a partir de um conjunto de coordenadas fornecido. Observações notáveis ​​podem se referir a espécies raras local ou nacionalmente, ou a aves incomuns por outros motivos, como, por exemplo, aves invernantes de uma espécie que normalmente só visita o local no verão. Os resultados incluem apenas a observação mais recente para cada espécie na região especificada",
+        initial=RECENT_CHOICES[0][0]
     )
     tipo_ordem = forms.ChoiceField(        
-        label='',
+        label='Ordenar por',
         choices=ORDER_CHOICES,
         widget=forms.RadioSelect,
-        help_text='Ordene as observações por taxonomia ou por data, da mais recente para a mais antiga'
+        help_text='Ordene as observações por taxonomia ou por data, da mais recente para a mais antiga',
+        initial=ORDER_CHOICES[0][0]    
     )
-    quantos = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Número de observações (máx.1000)'}), label='', min_value=1, max_value=1000)
-    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'dist', 'step': "1",'class': 'form-control', 'placeholder': 'Radio do local Km (max 50)'}), required=True, label='', min_value=1, max_value=50)    
+    quantos = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Número de observações (máx.1000)'}), label='Observações', help_text='Número máximo de observações (máx.1000)', min_value=1, max_value=1000,initial=15)
+    dist = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'dist', 'step': "1",'class': 'form-control', 'placeholder': 'Radio do local Km (max 50)'}), required=True, label='Radio', help_text='Radio do local Km (max 50)',min_value=1, max_value=50,initial=15)    
     place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=False, label='', empty_label="(Selecione o local)")
 
 class SightingForm(forms.Form):   

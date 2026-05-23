@@ -36,8 +36,7 @@ def fetch_species_recordings(species_code, lat, lon):
             'query': f"sp:\"{species_code}\"",
             'key': apikey
         }
-    #https://xeno-canto.org/api/3/recordings?query=gen:larus+sp:fuscus+cnt:brazil&per_page=50&page=3&key=959843e506bd0472c276b482cbde6fa1fc0a6323
-    print(params)
+    #print(params)
     try:
         response = requests.request("GET", api_url, params=params, timeout=5) # timeout to prevent 
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
@@ -78,7 +77,7 @@ def fetch_species_taxonomy(species_code):
         'data': data 
     }
 
-def fetch_hotspots_nearby(lat, lon, dist = 25, region='BR-RJ-049'):
+def fetch_hotspots_nearby(lat, lon, dist = 15, region='BR-RJ-049'):
     data = ''
     api_key = settings.EBIRD_API_KEY
     if lat != '':
@@ -158,15 +157,15 @@ def fetch_nearest_observations_of_a_species(species_code, lat, lon, dist= 50, ba
         'data': data 
     }
 
-def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dist= 25,region= "BR-RJ-049", locale= "pt-br"):
+def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dist= 15,region= "BR-RJ-049", locale= "pt-br"):
     api_key = settings.EBIRD_API_KEY 
     maxResults = howmany
     data = ''
     if lat == '':
-        # print('fetch_recent_observations_in_a_region')
+        #print(f'fetch_recent_observations_in_a_region {lon}- {region}')
         url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}&detail=full"
     else:
-        # print('fetch_recent_observations_in_a_LoC')
+        #print(f'fetch_recent_observations_in_a_LoC {lat} {lon}')
         url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sort={sort}&dist={dist}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
         
     #(url)
@@ -357,36 +356,36 @@ def hotspots_nearby_view(request):
     home_map = None
     map_html = None
     page_obj = None
+    latitude = request.session['crnt-lat']
+    longitude = request.session['crnt-lon']          
+    dist = 15
+    title ='Locais de avistamento na região'
     form = LocalsForm(request.GET)
     if form.is_valid():
         dist = request.GET['dist']        
-        selected_value = form.cleaned_data['tipo_procura']  
-        place_object = form.cleaned_data['place']            
-                           
-        if selected_value == 'L': # local subnational2 code.                                
+        selected_value = form.cleaned_data['tipo_procura']          
+        if selected_value == 'L': # local subnational2 code.            
+            place_object = form.cleaned_data['place']       
+            title =f'Locais de avistamento perto de {place_object.place}'                                
             latitude = place_object.lat
-            longitude = place_object.lon                
-        else : # selected_value == 'R''- nearby)  
-            latitude = request.session['crnt-lat']
-            longitude = request.session['crnt-lon']          
-
-        hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
-
-        if len(hotspots_nearby_data['data']) == 0 :
-            error = 'Nenhum local encontrado!' 
-            hotspots_nearby_data = None
-        else:
-            hotspots_nearby_data = hotspots_nearby_data['data']
-            home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
-            map_html = home_map._repr_html_()   
-            p = Paginator(hotspots_nearby_data, 10)
-            page_number = request.GET.get('page')
-            page_obj = p.get_page(page_number)                   
+            longitude = place_object.lon                            
     else:
         form = LocalsForm()      
+    hotspots_nearby_data = fetch_hotspots_nearby(latitude,longitude, dist)                                
+
+    if len(hotspots_nearby_data['data']) == 0 :
+        error = 'Nenhum local encontrado!' 
+        hotspots_nearby_data = None
+    else:
+        hotspots_nearby_data = hotspots_nearby_data['data']
+        home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
+        map_html = home_map._repr_html_()   
+        p = Paginator(hotspots_nearby_data, 10)
+        page_number = request.GET.get('page')
+        page_obj = p.get_page(page_number)                   
 
     return render(request, "passarinhar/locais.html", {
-            "title":'Locais de avistamento na região',
+            "title":title,
             "form": form,
             "error":error,
             "nearby_map":map_html,
@@ -508,12 +507,10 @@ def bird_of_the_day_view(request):
             data = json.loads(request.body)    
             request.session["crnt-lat"]=data.get('lat','')
             request.session["crnt-lon"]=data.get('lon','')
-            howmany = 1  
             recent_observations_data = fetch_recent_observations_in_a_region(
                 request.session["crnt-lat"],
                 request.session["crnt-lon"],
-                howmany,
-                dist=50,sort = 'species'          ) 
+                sort = 'date') 
                 
             if len(recent_observations_data['data']) > 0 :     
                 # print(recent_observations_data['data'][0]['comName'])
@@ -724,12 +721,15 @@ def localrecents(request, lat, lon, place):
     error = None
     page_number = request.GET.get('page')                      
     max_views = 30   
-    if lat != ' ':
-        recent_observations_data = fetch_recent_observations_in_a_region(lat, lon, max_views, dist=25, sort='species')
-        title = f"Avistamentos recentes perto de {place}"   
-    else:
+    if lat == ' ': 
+        # search by região name
         recent_observations_data = fetch_recent_observations_in_a_region('', lon, max_views, region=lon, sort='species')
-        title = f"Avistamentos recentes em {place} (região) {lon}"
+        title = f"Avistamentos recentes em {place} [{lon}]"
+    else:
+        # search by coords
+        recent_observations_data = fetch_recent_observations_in_a_region(lat, lon, max_views, dist=15, sort='species')
+        title = f"Avistamentos recentes perto de {place}"   
+        
     if len(recent_observations_data['data']) == 0 :
         page_obj = None
         error = 'Nenhuma observação recente encontrada!'
@@ -746,13 +746,13 @@ def localrecents(request, lat, lon, place):
 def recent_observations_view(request):
     error = None
     page_obj = None    
-    howmany = None
-    
+    howmany = 15
+    sort_value = 'date'
+    dist = 15
     latitude = request.session["crnt-lat"]
     longitude = request.session["crnt-lon"]                
     title = 'Avistamentos recentes na região'
     form = RecentsForm(request.GET)
-    print(request.method, form.is_valid())
     if form.is_valid():
         howmany = int(form.cleaned_data['quantos'])
         dist = int(form.cleaned_data['dist'])
@@ -776,29 +776,25 @@ def recent_observations_view(request):
                 title = 'Avistamentos recentes na região'                        
             recent_observations_data = fetch_recent_observations_in_a_region(latitude,longitude,howmany, sort_value, dist)                                
 
-        if len(recent_observations_data['data']) == 0 :
-            error = 'Nenhuma observação recente encontrada!'           
-        else:
-            p = Paginator(recent_observations_data['data'], 10)                
-            if request.method == 'POST':
-                page_obj = p.get_page(1)                
-            else:
-                page_obj = p.get_page(request.GET.get('page'))                
-        return render(request, "passarinhar/recentes.html", {
-            "title": title,
-            "form": form,
-            "error":error,            
-            "type_page":'recentes',            
-            "page_obj":page_obj
-            })
     else:
-        return render(request, "passarinhar/recentes.html", {
-            "title": 'Avistamentos recentes na região',
-            "form": RecentsForm(),
-            "error":'',
-            "type_page":'recentes',            
-            "page_obj":None
-            })
+        form = RecentsForm()
+        recent_observations_data = fetch_recent_observations_in_a_region(latitude,longitude,howmany, sort_value, dist)                                
+
+    if len(recent_observations_data['data']) == 0 :
+        error = 'Nenhuma observação recente encontrada!'           
+    else:
+        p = Paginator(recent_observations_data['data'], 10)                
+        if request.method == 'POST':
+            page_obj = p.get_page(1)                
+        else:
+            page_obj = p.get_page(request.GET.get('page'))                
+    return render(request, "passarinhar/recentes.html", {
+        "title": title,
+        "form": form,
+        "error":error,            
+        "type_page":'recentes',            
+        "page_obj":page_obj
+        })
 
 def mysightings(request):      
     mysightings = Sighting.objects.filter(birder=request.user)

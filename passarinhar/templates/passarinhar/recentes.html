@@ -9,26 +9,47 @@
 {% else %}
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar1">
+    <i class="bi bi-sliders"></i> Filtros
+</button>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="filterSidebar1">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Filtros</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="mb-3">
+            <form method="get">
+                {% csrf_token %}
+                <div class="form-group">
+                    {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {% if field.help_text %}
+                        <span title="{{ field.help_text|safe}}"><i class="bi bi-question-circle"></i></span>
+                        {% endif %}
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success w-100">Aplicar Filtros</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
 
 {% if type_page == 'recentes' %}
-<form method="get">
-    {% csrf_token %}
-    <div class="form-group">
-        {{form.as_p}}
-    </div class="form-group">
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Procurar</button>
-    </div>
-</form>
 {% else %}
 <div class="container">
     <a href="javascript:void(0);" onclick="goBack()">Voltar</a>
 </div>
 {% endif %}
-
 {% if page_obj %}
 <nav aria-label="Page navigation">
-    <ul class="pagination">
+    <ul class="pagination justify-content-end">
 
         {% if page_obj.has_previous %}
         <li class="page-item"><a class="page-link" href="{% querystring source_data=form.cleaned_data page=1 %}">
@@ -56,36 +77,32 @@
     </ul>
 
 </nav>
-{% endif %}
 
-{% if page_obj %}
 {% for recent_observation in page_obj %}
 <div class="row p-1 my-1 bg-white text-dark border border-secondary">
-    <div id="spice-div{{ forloop.counter0 }}" style="display:block" class="col-lg-4 col-md-3 col-sm-6 col-xs-12 my-1">
+    <div id="spice-div{{ forloop.counter0 }}" style="display:block" class="col-lg-4 col-md-4 col-sm-6 col-xs-12 my-1">
         <h3 id="name{{ forloop.counter0 }}">{{recent_observation.comName}}</h3>
         <ul>
             <li>Nome científico: <span id="sciName{{ forloop.counter0 }}">{{recent_observation.sciName}}</span></li>
             <li>Código da espécie: <span
                     id="speciesCode{{ forloop.counter0 }}">{{recent_observation.speciesCode}}</span></li>
             <li>Data da observação: <span id="obsDt{{ forloop.counter0 }}">{{recent_observation.obsDt}}</span></li>
-            <li>Local: <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}</span></li>
+            <li>Local: <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}
+                    Coords:{{recent_observation.lat}} {{recent_observation.lng}}</span></li>
+            <li>Código da região: {{recent_observation.locId}}</li>
             <li>Quantidade: <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
         </ul>
-        <div id="player{{recent_observation.comName}}" class="player d-flex flex-column">
-            {{recent_observation.sciName}}
-        </div>
-
         {% if user.is_authenticated %}
         <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar especie
         </button>
         {% endif %}
     </div>
-    {% csrf_token %}
-    <div class="col-lg-8 col-md-9 col-sm-6 col-xs-12 p-3">
+    <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12 p-3">
         <img class='img-responsive bird-img' id={{recent_observation.comName}} src=""
             alt="{{ recent_observation.sciName }}">
     </div>
-
+    {% csrf_token %}
+    <div id="player{{recent_observation.comName}}" class="player"></div>
 </div>
 {% empty %}
 <div>*** Nenhuma observação encontrada ***</div>
@@ -99,6 +116,7 @@
     }
 </script>
 <script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
 
 {% endblock %}

@@ -4,63 +4,60 @@
     </div>
     <div>
         <h4 class="text-capitalize">{{ spice.name }}</h4>
-        <span id="spice-code{{spice.id}}">{{spice.spice_code}}</span>
         <span id="spice-common-name{{spice.id}}">{{spice.DTScientific_name.Common_name}}</span>
-        <span id="spice-scientific-name{{spice.id}}">{{spice.scientific_name}}</span>
-        <div id="player{{spice.spice_code}}" class="d-flex flex-column"></div>
+        <span id="spice-code{{spice.id}}">{{spice.spice_code}}</span>
+        <!--span id="spice-scientific-name{{spice.id}}">{{spice.scientific_name}}</span-->
 
         <h5 class="text-capitalize">Taxonomia</h5>
         {% csrf_token %}
-        <ul id="spice-taxo{{spice.spice_code}}"></ul>
+        <ul title="Taxonomia" id="spice-taxo{{spice.spice_code}}"></ul>
 
         <h5 class="text-capitalize">População</h5>
         <ul title="População">
             <li class="text-capitalize">Estado de conservação: <span id='spice-rl{{spice.id}}'
                     class="badge">{{spice.DTScientific_name.RL_Category}}</span></li>
-            <li>Indivíduos adultos:
-                {% if spice.DTScientific_name.Population_size == "Unknown" %}
-                Desconhecido
-                {% else %}
-                {{ spice.DTScientific_name.Population_size}}
-                {% endif %}
-                <small>Fonte: {{ spice.DTScientific_name.Population_size_derivation}}</small>
+            {% if spice.DTScientific_name.Population_size != "Unknown" %}
+            <li>Indivíduos adultos: {{ spice.DTScientific_name.Population_size}}
+                <!--small>Fonte: {{ spice.DTScientific_name.Population_size_derivation}}</small-->
             </li>
+            {% endif %}
             <li>Tendência:
                 {%if spice.DTScientific_name.Current_population_trend == "Increasing"%}
-                Crescente
-                <i class="bi bi-arrow-up-right text-success h5"></i>
+                <!--Crescente-->
+                <i class="bi biarrow-up-right text-success h5"></i>
                 {%elif spice.DTScientific_name.Current_population_trend == "Decreasing"%}
-                Decrescente
+                <!--Decrescente-->
                 <i class="bi bi-arrow-down-right text-danger h5"></i>
                 {%else%}
-                Estável
+                <!--Estável-->
                 <i class="bi bi-arrow-right text-warning h5"></i>
                 {%endif%}
-                <small>Fonte: {{spice.DTScientific_name.Current_population_trend_derivation}}</small>
+                <!--small>Fonte: {{spice.DTScientific_name.Current_population_trend_derivation}}</small-->
             </li>
             <li>Possível Extinção:
                 <span id='spice-pe{{spice.id}}' class="yes-no badge">{{spice.DTScientific_name.PE}}</span>
+                <!--
                 <small>Possível Extinção na Natureza:</small>
                 <span id='spice-pew{{spice.id}}' class="yes-no badge">{{spice.DTScientific_name.PEW}}</span>
+                -->
             </li>
         </ul>
 
         <h5 class="text-capitalize">Tipo de ave</h5>
-        <ul>
+        <ul class="list-unstyled" title="Tipo de ave">
             {% if spice.DTScientific_name.Seabird == "TRUE" %}
-            <li>Marinho</li>
+            <li>Marinha</li>
             {% endif %}
             {% if spice.DTScientific_name.Waterbird == "TRUE" %}
-            <li>Aquático</li>
+            <li>Aquática</li>
             {% endif %}
             {% if spice.DTScientific_name.Landbird == "TRUE" %}
             <li>Terrestre</li>
             {% endif %}
         </ul>
 
-
         <h5 class="text-capitalize">Habitat</h5>
-        <ul>
+        <ul class="list-unstyled" title="Habitat">
             <li>Estado Migratório: {{ spice.DTScientific_name.Migratory_status}}</li>
             {% if spice.DTScientific_name.RL_AOO != "0" %}
             <li>Área de Ocupação: {{ spice.DTScientific_name.RL_AOO}} Km2</li>
@@ -69,7 +66,7 @@
         </ul>
 
         <h5 class="text-capitalize">Ecossistema</h5>
-        <ul>
+        <ul class="list-unstyled" title="Ecossistema">
             {% if spice.DTScientific_name.Ecosystem_Terrestrial == "TRUE" %}
             <li>Terrestre</li>
             {% endif %}
@@ -81,4 +78,5 @@
             {% endif %}
         </ul>
     </div>
+    <!--div id="player{{spice.spice_code}}" class="d-flex flex-column"></div-->
 </div>
