@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   var fav_btns = Array.from(document.getElementsByClassName('fav-button'));
   fav_btns.forEach(_btn => {
-    console.log(_btn.id, _btn.dataset.id)
+    // console.log(_btn.id, _btn.dataset.id)
     document.getElementById(_btn.id).addEventListener('click', () =>
       addFavourite(_btn.dataset.id));
   })

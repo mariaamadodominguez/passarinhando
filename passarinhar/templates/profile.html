@@ -1,0 +1,110 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Input Form -->
+<form id="bird-form">
+    {% csrf_token %}
+    <input type="text" id="bird-name-input" placeholder="Entre o nome científico do pássaro">
+    <input type="text" id="spiceCode-input" placeholder="Digite o código spice do pássaro">
+    <input type="text" id="ptName-input" placeholder="Digite o nome comum em português do pássaro">
+    <button type="submit" id="submit-btn">Gerar Perfil</button>
+</form>
+
+<!-- Results Section (Initially Hidden) -->
+<div id="results-container" style="display: none; margin-top: 20px;">
+    <h3>Perfil do pássaro</h3>
+    <p id="ai-report-text"></p>
+
+    <div id="audio-container" style="margin-top: 15px;">
+        <h4>Ouça o canto</h4>
+        <audio id="bird-audio-player" controls>
+            <source id="audio-source" src="" type="audio/mpeg">
+            Seu navegador não suporta o elemento de áudio.
+        </audio>
+    </div>
+    <!-- Display the Xeno-canto Audio Stream player if available -->
+    {% if audio_url != "#" %}
+    <div class="audio-card">
+        <h4>Ouça o canto</h4>
+        <audio controls>
+            <source src="{{ audio_url }}" type="audio/mpeg">
+            Seu navegador não suporta o elemento de áudio.
+        </audio>
+        <p><small>Áudio transmitido ao vivo via Xeno-canto</small></p>
+    </div>
+    {% endif %}
+</div>
+
+{% block script %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.getElementById('bird-form').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Stop the page from reloading
+
+            const birdNameInput = document.querySelector('#bird-name-input').value;
+            const spiceCode = document.querySelector('#spiceCode-input').value;
+            const ptName = document.querySelector('#ptName-input').value;
+            const submitBtn = document.getElementById('submit-btn');
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            console.log(birdNameInput, spiceCode, ptName)
+            //if (!birdNameInput.trim()) return alert('Please enter a bird name.');
+
+            // Visual feedback for the user while waiting
+            submitBtn.innerText = 'Gerando perfil...';
+            submitBtn.disabled = true;
+
+            // Prepare the form payload
+            const formData = new FormData();
+            formData.append('bird_name', birdNameInput);
+            formData.append('spice_code', spiceCode);
+            formData.append('pt_name', ptName);
+
+            try {
+                // Send async POST request to your Django view
+                const response = await fetch("bird_profile_view", { // Empty string paths to current URL
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken // Required security header for Django
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Erro de rede');
+
+                const data = await response.json();
+                // 1. Inject the text summary from Gemini
+                document.getElementById('ai-report-text').innerText = data.ai_report_text;
+
+                // 2. Handle the Xeno-canto audio stream player
+                const player = document.getElementById('bird-audio-player');
+                const source = document.getElementById('audio-source');
+                const audioBox = document.getElementById('audio-container');
+
+                if (data.audio_url && data.audio_url !== "#") {
+                    source.src = data.audio_url;
+                    player.load(); // Reload the element with the new track source
+                    audioBox.style.display = 'block';
+                } else {
+                    audioBox.style.display = 'none'; // Hide if no audio file exists
+                }
+
+                // Reveal the hidden results section
+                document.getElementById('results-container').style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                //alert('Erro ao buscar perfil da ave');
+            } finally {
+                // Reset the button state
+                submitBtn.innerText = 'Analisar esta ave';
+                submitBtn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

@@ -1,4 +1,33 @@
-var sessionStoragegeolocation = 0;
+export const getWikiSummary = async (comName, sciName) => {
+    const headers = new Headers();
+    headers.append('User-Agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)');
+    headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');
+    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;
+    // console.log(titles)
+    titles = titles.replace(/\s+/g, ' ').trim()
+    console.log(titles)
+    var pt_url = "https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(titles);
+    const init = {
+        method: 'GET',
+        headers
+    };
+    var summary_text = '';
+
+    await fetch(pt_url, init)
+        .then((response) => {
+            return response.json();
+        })
+        .then((text) => {
+            //console.log(text['extract'])
+            summary_text = text['extract']
+        })
+        .catch((e) => {
+            // error in e.message
+            console.log(e.message)
+        });
+    return summary_text
+}
+
 export const searchWikiData = async (comName, sciName, enComName = '') => {
     var img_url = "";
     var pageData = null
@@ -126,7 +155,7 @@ export const getXenoCanto = async (spice_code, scientific_name) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/bird_player_view';
     var selector = `#player${spice_code}`;
-    //console.log(selector, spice_code, scientific_name)
+    console.log(selector, spice_code, scientific_name)
     document.querySelector(selector).innerHTML = "";
     await fetch(url, {
         method: 'POST',

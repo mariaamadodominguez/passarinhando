@@ -18,6 +18,7 @@
             <li>Estado de Conservação: <span id="spice-rl" class="badge">LC</span></li>
             <li>Observação: <span class="text-capitalize" id="loc-name"></span> em <span id="obs-date"></span></li>
         </ul>
+
     </div>
     <div class="col-lg-8 col-md-9 col-sm-6 col-xs-12" id="debossan">
         <!--a
@@ -25,12 +26,13 @@
             Região Serrana do rio de janeiro - Areas protegidas</a-->
         {{ debossan_map|safe }}
     </div>
+    <div id="wiki-summary-text" class="d-flex flex-column"></div>
     <div id="player" class="d-flex flex-column"></div>
 
 </div>
 
 {% block script %}
-
 <script type="module" src="{% static 'passarinhar/birdoftheday.js' %}"></script>
 {% endblock %}
+
 {% endblock %}

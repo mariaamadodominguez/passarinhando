@@ -16,37 +16,39 @@
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
         {% if user.is_authenticated and user == sighting.birder %}
-        <form action="{% url 'passarinhar:edit_sighting' sighting.id %}" method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input class="btn btn-primary" type="submit" value="Salvar">
-            <a class="btn btn-secondary" href="{% url 'passarinhar:sighting' sighting.id %}">Cancelar</a>
-            <a class="btn btn-danger" href="{% url 'passarinhar:delete_sighting' sighting.id %}">Deletar</a>
-        </form>
+        <div class="form-group">
+            <form action="{% url 'passarinhar:edit_sighting' sighting.id %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input class="btn btn-primary" type="submit" value="Salvar">
+                <a class="btn btn-secondary" href="{% url 'passarinhar:sighting' sighting.id %}">Cancelar</a>
+                <a class="btn btn-danger" href="{% url 'passarinhar:delete_sighting' sighting.id %}">Deletar</a>
+            </form>
+        </div>
         {% else %}
-        <ul>
-            <li>
-                {{ sighting.description|linebreaksbr }}
-            </li>
-            <li>
-                {{ sighting.birder }}
-            </li>
-            <li>
+        <div class="details">
+            {{ sighting.common_name }}
+            {{ sighting.description |linebreaksbr }}
+            <div class="info">
                 {{ sighting.place }}
-            </li>
-            <li>
+                {{ sighting.birder }}
                 {{ sighting.date_created }}
-            </li>
-        </ul>
+            </div>
+        </div>
         {% endif %}
-        <div id="map">
+        <div id="map" class="p-1 my-1">
             {{ home_map|safe }}
         </div>
+        <div style="display:none">
+            <span id="comname{{sighting.spice.id}}">{{sighting.spice.name}}</span>
+            <span id="sciname{{sighting.spice.id}}">{{sighting.spice.scientific_name}}</span>
+        </div>
+        <div id="wiki-summary-text"></div>
+        <div id="player{{sighting.spice.spice_code}}"></div>
     </div>
-
-    <span class="spice col-lg-6 col-md-9 col-sm-6 col-xs-12" id='{{sighting.spice.id}}'>
+    <div class="spice col-lg-6 col-md-9 col-sm-6 col-xs-12" id='{{sighting.spice.id}}'>
         {% include 'passarinhar/components/spice_card.html' with spice=sighting.spice %}
-    </span>
+    </div>
 
 </div>
 

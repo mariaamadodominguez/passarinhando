@@ -60,7 +60,7 @@
     <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
         <button type="submit" id='{{spice.id}}' class="btn-outline-success btn-detail-info">
             <img class="img-responsive" src="{{ spice.image.thumbnails.small.url}}"></button>
-        <span class="text-capitalize font-weight-bold">{{ spice.name }}</span>
+        <span id="spice-name{{spice.id}}" class="text-capitalize font-weight-bold">{{ spice.name }}</span>
         <small id="spice-scientific-name{{spice.id}}"
             class="text-capitalize font-italic ">{{spice.scientific_name}}</small>
     </div>
@@ -69,18 +69,22 @@
             {% include 'passarinhar/components/spice_card.html' with spice=spice %}
         </div>
         <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+            <p class="card" id="wiki-summary-text{{spice.id}}"></p>
             {% csrf_token %}
             <div id="spice-map{{spice.spice_code}}">{{ spice_map|safe }}</div>
-            <div id="player" class="d-flex flex-column">
-                <div id="player{{spice.spice_code}}"></div>
-            </div>
+            <!--div id="player" class="d-flex flex-column"-->
+            <div id="player{{spice.spice_code}}" class="d-flex flex-column"></div>
+            <!--/div-->
+
         </div>
+
     </div>
     {% empty %}
     <div>*** Nenhum registro ainda***</div>
     {% endfor %}
 </div>
 {% block script %}
+<script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
 <script type="module" src="{% static 'passarinhar/spices.js' %}"></script>
 <!-- Bootstrap 5 JS Bundle (Includes Popper for Dropdowns) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

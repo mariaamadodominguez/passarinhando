@@ -12,10 +12,18 @@
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
-        {{ form.as_p }}
+        {% for field in form %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {% if field.help_text %}
+            <span title="{{ field.help_text|safe}}"><i class="bi bi-question-circle"></i></span>
+            {% endif %}
+            {{ field }}
+        </div>
+        {% endfor %}
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-primary">Procurar geo-localização</button>
+        <button type="submit" class="btn btn-primary">Procurar</button>
     </div>
 
 </form>
@@ -31,12 +39,14 @@
                     <li>Longitude: <span id="lon{{forloop.counter0}}">{{gdcity.lon}}</span></li>
                 </ul>
             </li>
-            <li>Estado: <span id="subnational2Code{{forloop.counter0}}">{{ gdcity.state }}</li>
-            <li>País: <span id="locId{{forloop.counter0}}">{{ gdcity.country }}</span></li>
+            <li>Estado: <span id="state{{forloop.counter0}}">{{ gdcity.state }}</span></li>
+            <li>País: <span id="country{{forloop.counter0}}">{{ gdcity.country }}</span></li>
         </ul>
         <div hidden>
             <span id="latestObsDt{{forloop.counter0}}">N/I</span>
             <span id="numSpeciesAllTime{{forloop.counter0}}">0</span>
+            <span id="subnational2Code{{forloop.counter0}}">N/I</span>
+            <span id="locId{{forloop.counter0}}"></span>
         </div>
         {% if user.is_authenticated %}
         {% csrf_token %}
@@ -54,5 +64,6 @@
 
 {% if user.is_authenticated %}
 <script src="{% static 'passarinhar/locals.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endif %}
 {% endblock %}

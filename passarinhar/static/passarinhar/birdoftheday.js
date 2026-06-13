@@ -2,6 +2,7 @@ import { searchWikiData } from './utils.js';
 import { getCurrentLocation } from './utils.js';
 import { getRLCategory } from './utils.js';
 import { getXenoCanto } from './utils.js';
+import { getWikiSummary } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     async function showBirdofTheDay() {
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
         await getCurrentLocation();
         //
 
-        console.log('showBirdofTheDay:', sessionStorage.lat, sessionStorage.lon);
+        // console.log('showBirdofTheDay:', sessionStorage.lat, sessionStorage.lon);
         await fetch(url, {
             method: 'POST',
             headers: {
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelector(`#spice-rl`).innerHTML = LC;
                 getRLCategory(document.querySelector(`#spice-rl`));
 
-                displayBirdImg(data[0], enCommon_name)
+                getWikiData(data[0], enCommon_name)
 
 
                 const player = document.createElement('div');
@@ -68,8 +69,13 @@ document.addEventListener('DOMContentLoaded', function () {
     showBirdofTheDay()
 })
 
-const displayBirdImg = async (ebirddata, enCommon_name) => {
+const getWikiData = async (ebirddata, enCommon_name) => {
     const img_url = await searchWikiData(ebirddata.comName, ebirddata.sciName, enCommon_name);
-    console.log(img_url, enCommon_name)
+    //console.log(img_url, enCommon_name)
     document.getElementById('bird-img').src = img_url;
+
+    const wiki_summary = await getWikiSummary(ebirddata.comName, ebirddata.sciName);
+    //console.log(wiki_summary)
+    document.getElementById('wiki-summary-text').innerText = wiki_summary
+
 }

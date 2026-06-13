@@ -73,6 +73,7 @@
 </nav>
 
 <div class='container'>
+    <p> <span Id="crnt-lat" class="coords"></span> <span Id="crnt-lon" class="coords"></span></p>
     <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
         <h2 id="folium_map">Mapa</h2>
         {{ nearby_map|safe }}
@@ -95,13 +96,18 @@
                 redondezas</a>
         </div>
         <ul>
-            <li>Id. do local: <span id="locId{{forloop.counter0}}">
-                    <a href="{% url 'passarinhar:localrecents' ' ' local.locId local.locName%}">{{local.locId}}</a>
-                </span></li>
-            <li>Código da região: <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
-            <li>Última Observação:<span id="latestObsDt{{forloop.counter0}}">{{local.latestObsDt}}</span></li>
-            <li>Total Especies: <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>
+            <li>Id. do local
+                <a href="{% url 'passarinhar:localrecents' ' ' local.locId local.locName%}"> <span
+                        id="locId{{forloop.counter0}}">{{local.locId}}</span></a>
+            </li>
+            <li>Código da região <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>
+            <li>Última Observação<span id="latestObsDt{{forloop.counter0}}">{{local.latestObsDt}}</span></li>
+            <li>Total Especies <span id="numSpeciesAllTime{{forloop.counter0}}">{{local.numSpeciesAllTime}}</span></li>
         </ul>
+        <div hidden>
+            <span id="state{{forloop.counter0}}"></span>
+            <span id="country{{forloop.counter0}}"></span>
+        </div>
     </div>
     {% empty %}
     <div>*** Nenhuma localidade encontrada ***</div>
@@ -109,7 +115,7 @@
 </div>
 {% endif %}
 {% block script %}
-<!--script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script-->
+<script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
 <script src="{% static 'passarinhar/locals.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

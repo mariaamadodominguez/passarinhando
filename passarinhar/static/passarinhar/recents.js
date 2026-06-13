@@ -1,15 +1,20 @@
 import { searchWikiData } from './utils.js';
 import { getXenoCanto } from './utils.js';
-
+import { getTaxonomy } from './utils.js';
 document.addEventListener('DOMContentLoaded', function () {
     var save_btns = Array.from(document.getElementsByClassName('save-button'));
     save_btns.forEach(_btn => {
+        //var species_code = document.querySelector(`#speciesCode${_btn.id}`).innerHTML        
         document.getElementById(_btn.id).addEventListener('click', () =>
             saveSpice(_btn.id));
     })
+
+    var spice_codes = Array.from(document.getElementsByClassName('spice_code'));
+    spice_codes.forEach(async function (_code) { await getTaxonomy(_code.innerHTML.trim()) })
+
     var bird_imgs = Array.from(document.getElementsByClassName('bird-img'));
     bird_imgs.forEach(async function (_img) {
-        console.log(_img.alt, _img.id);
+        //console.log(_img.alt, _img.id);
         _img.src = await searchWikiData(_img.id, _img.alt);
         getXenoCanto(_img.id, _img.alt);
     })
@@ -57,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 )
 
-
 function saveSpice(spice_id) {
     var url = '/addNewSpice'
     var name = document.querySelector(`#name${spice_id}`).innerHTML;
@@ -79,7 +83,6 @@ function saveSpice(spice_id) {
     )
         .then((resp) => resp.json())
         .then((result) => {
-            console.log(result);
             document.querySelector('#error-msg').style.display = 'block';
             document.querySelector('#error-msg').innerHTML = result.message;
         })

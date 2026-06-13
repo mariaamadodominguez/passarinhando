@@ -1,5 +1,5 @@
 from django import forms
-from .models import Spice, Place, DataZoneSpecie, TabFamily
+from .models import Spice, Place, DataZoneSpecie, TabFamily, Place
 
 ORDER_CHOICES = [
     ('D', 'Por data'),
@@ -24,8 +24,8 @@ class CommentForm (forms.Form):
     newComment = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control','placeholder': 'Escreve um comentário', "rows":"2"}), label=False)
 
 class GeoForm(forms.Form):
-    localidade = forms.CharField(widget=forms.TextInput(attrs={'id':'localidade', 'max_length':'100', 'class':'form-control','placeholder': 'Localidade'}), label=False)    
-    limite = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Limite (5)'}), min_value=1, max_value=5, label=False)
+    localidade = forms.CharField(widget=forms.TextInput(attrs={'id':'localidade', 'max_length':'100', 'class':'form-control','placeholder': 'Localidade'}), label='Nome do local', help_text='Nome do local')    
+    limite = forms.FloatField(widget=forms.NumberInput(attrs={'id': 'query_limit', 'step': "1",'class': 'form-control', 'placeholder': 'Limite (5)'}), min_value=1, max_value=5, label='Limite', initial=5, help_text='Número de nomes de locais na resposta')
 
 
 class LocalsForm(forms.Form):
@@ -61,7 +61,7 @@ class RecentsForm(forms.Form):
 class SightingForm(forms.Form):   
     from datetime import datetime, timedelta
     
-    name = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control','placeholder': 'Nome da passarinhada'}), label="")
+    name = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control','placeholder': 'De um nome ao avistamento'}), label="")
     date_created = forms.DateField(
         initial=datetime.now() ,
         widget=forms.widgets.DateInput(
@@ -69,8 +69,8 @@ class SightingForm(forms.Form):
                 'onfocus': "(this.type='date')", }
         ),
         label="Data")
-    spice = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Spice.objects.all(), required=True, label='', empty_label="(Selecione a espécie)")
-    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.all(), required=True, label='', empty_label="(Selecione o local)")
+    spice = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Spice.objects.order_by('name').all(), required=True, label='', empty_label="(Selecione a espécie)")
+    place = forms.ModelChoiceField(widget=forms.Select(attrs={'class': 'form-control'}), queryset= Place.objects.order_by('place').all(), required=True, label='', empty_label="(Selecione o local)")
     description =  forms.CharField(widget=forms.Textarea(attrs={'max_length':'120', "rows":"4",'class': 'form-control', 'placeholder': 'Descreva o avistamento'}), label='')
   
 class SpiceForm(forms.Form):    
@@ -87,8 +87,47 @@ class SpiceForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Set the choices dynamically in the constructor
-        qs = TabFamily.objects.values_list('en', 'pt_BR').distinct()
+        qs = TabFamily.objects.values_list('en', 'pt_BR').order_by('pt_BR').distinct()
         qs = list(qs)
         qs.insert(0, ('', '---'))
         self.fields['family'].choices = qs
         #self.fields['family'].choices.insert(0, ('', '---'))
+
+class PlaceForm(forms.Form):    
+    place =  forms.CharField(widget=forms.TextInput(attrs={'max_length':'64','class':'form-control','placeholder': 'Local'}), label="", required=False )    
+    subnational2Code = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control'}),  
+        label="Codigo Subnacional",      
+        required=False,
+        choices=[], 
+    )
+    region = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control'}),  
+        label="Região",      
+        required=False,
+        choices=[], 
+    )
+    country = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'form-control'}),  
+        label="Pais",      
+        required=False,
+        choices=[], 
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the choices dynamically in the constructor
+        qs = Place.objects.values_list('subnational2Code', 'subnational2Code').order_by('subnational2Code').distinct()
+        qs = list(qs)
+        qs.insert(0, ('', '---'))
+        self.fields['subnational2Code'].choices = qs
+        
+        qs = Place.objects.values_list('region', 'region').order_by('region').distinct()
+        qs = list(qs)
+        qs.insert(0, ('', '---'))
+        self.fields['region'].choices = qs
+        
+        qs = Place.objects.values_list('country', 'country').order_by('country').distinct()
+        qs = list(qs)
+        qs.insert(0, ('', '---'))
+        self.fields['country'].choices = qs

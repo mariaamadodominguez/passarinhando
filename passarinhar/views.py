@@ -11,7 +11,7 @@ from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.db.models import Q, F
 from dbm import error
-from .forms import GeoForm, RecentsForm, LocalsForm, SightingForm, SpiceForm
+from .forms import GeoForm, RecentsForm, LocalsForm, SightingForm, SpiceForm, PlaceForm
 from .models import WUser, Post, Follower, Sighting, Place, Spice, DataZoneSpecie, SpeciesTaxonomy, TabFamily
 import folium
 import json
@@ -19,7 +19,7 @@ import os
 import requests
 import urllib.request
 
-def fetch_species_recordings(species_code, lat, lon):
+def fetch_species_recordings(species_code, lat='', lon=''):
     apikey = settings.XENO_API_KEY
     data=''    
     api_url = f"https://xeno-canto.org/api/3/recordings"
@@ -36,7 +36,7 @@ def fetch_species_recordings(species_code, lat, lon):
             'query': f"sp:\"{species_code}\"",
             'key': apikey
         }
-    #print(params)
+    print(params)
     try:
         response = requests.request("GET", api_url, params=params, timeout=5) # timeout to prevent 
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
@@ -49,6 +49,7 @@ def fetch_species_recordings(species_code, lat, lon):
         # print(response.json())  
         data = response.json()
     
+    #
     # print(data)
     return data
 
@@ -191,12 +192,43 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dis
 
 def allplaces(request):    
     error = None
-    allplaces = Place.objects.all()
+    page_obj = None
+    page_number = request.GET.get('page')
+    selected_place =''
+    selected_subnational2Code = ''
+    selected_region = ''
+    selected_country = ''
+    title = "Locais de Avistamento Registrados"             
     crntlat = request.session["crnt-lat"]
-    crntlon = request.session["crnt-lon"]
-        
+    crntlon = request.session["crnt-lon"]       
+
+    if request.method == 'POST':
+        form = PlaceForm(request.POST)
+        if form.is_valid():
+            selected_place = form.cleaned_data['place']
+            selected_subnational2Code = form.cleaned_data['subnational2Code']
+            selected_region = form.cleaned_data['region'] 
+            selected_country = form.cleaned_data['country']
+    else:          
+        form = PlaceForm()        
+
+    if selected_place != '':
+        allplaces = Place.objects.filter(place__icontains=selected_place)            
+        title = f"Locais {selected_place}* registrados"
+    elif selected_subnational2Code != '':        
+        allplaces = Place.objects.filter(subnational2Code=selected_subnational2Code) 
+        title = f"Locais de avistamento na area {selected_subnational2Code} "
+    elif selected_region != '' :        
+        allplaces = Place.objects.filter(region=selected_region)
+        title = f"Locais de avistamento na região {selected_region}"
+    elif selected_country != '' :        
+        allplaces = Place.objects.filter(country=selected_country)
+        title = f"Locais de avistamento no pais {selected_country}"
+    else:
+        allplaces = Place.objects.all()
+
+    allplaces = allplaces.order_by("place").all()   
     if allplaces:
-        allplaces = allplaces.order_by("-pk").all()   
         p = Paginator(allplaces, 10)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)
@@ -209,10 +241,11 @@ def allplaces(request):
         page_obj = None
     
     return render(request, "passarinhar/places.html", {
-        'title':"Locais de Avistamento Registrados",
+        'title':title,
         "page_name": 'allplaces',        
         'page_obj':page_obj,
         "nearby_map":map_html,
+        'form': form,
         "error": error
         })
             
@@ -222,22 +255,21 @@ def allspices(request):
     page_number = request.GET.get('page')
     selected_name = ''
     selected_family = ''
-    
+    title = "Especies Registradas"         
+
     if request.method == 'POST':
         form = SpiceForm(request.POST)
         if form.is_valid():
             selected_name = form.cleaned_data['spice']
             selected_family = form.cleaned_data['family']                  
-    else:  
-        title = "Especies Registradas"         
+    else:          
         form = SpiceForm()        
            
     if selected_name !='':    
         allspices = Spice.objects.filter(name__icontains=selected_name)            
         title = f"Especies {selected_name}* registradas"
             
-    elif selected_family != '':
-        
+    elif selected_family != '':        
         bird_families = TabFamily.objects.filter(en=selected_family)             
         if bird_families:            
             try:
@@ -269,8 +301,7 @@ def allspices(request):
         "error": error
         })
 
-def addFavourite(request):
-    
+def addFavourite(request):    
     data = json.loads(request.body)    
     place_id = data.get('place_id','')
     fav = None
@@ -333,6 +364,7 @@ def fetch_geo_data(city, limit):
     }        
 
 def geo_view(request):
+    title = 'Coordenadas geográficas (latitude e longitude)'
     if request.method == 'POST':
         form = GeoForm(request.POST)
         if form.is_valid():
@@ -340,15 +372,15 @@ def geo_view(request):
             limite = int(form.cleaned_data['limite'])
             geo_data = fetch_geo_data(localidade, limite)   
             if len(geo_data['data']) > 0 :
-                return render(request, 'passarinhar/geoloc.html', {'title':'Geodata', 'geo_data': geo_data, 'form': form})
+                return render(request, 'passarinhar/geoloc.html', {'title':title, 'geo_data': geo_data, 'form': form})
             else:
                 return render(request, 'passarinhar/geoloc.html', {
-                                'title':'Geodata',
-                                'error': f'Geodata para {localidade} não encontrada!',
+                                'title':title,
+                                'error': f'Coordenadas geográficas para {localidade} não encontradas!',
                                 'form': form })
     else:
         form = GeoForm()        
-    return render(request, 'passarinhar/geoloc.html', {'title':'Geodata', 'form': form})    
+    return render(request, 'passarinhar/geoloc.html', {'title':title, 'form': form})    
 
 def hotspots_nearby_view(request):
     hotspots_nearby_data = None
@@ -400,10 +432,17 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
     "User-Agent": "PAssarinhar/1.0 (contact: mardomngz@gmail.com)",
     #"referrer" : "no-referrer-when-downgrade"
     }
+
+    #spice_map = show_on_map(latitude, longitude, "nearest", latlng, zoom_start = 10)
     if type == "favourite" or type == "allplaces":
         locName_list = [item.place for item in nearby] 
         lng_list = [item.lon for item in nearby]
         lat_list = [item.lat for item in nearby]        
+    elif type == "nearest":
+        lng_list = [item['lng'] for item in nearby]
+        lat_list = [item['lat'] for item in nearby]
+        locName_list = [f"{item['locName']} - {item['obsDt']}" for item in nearby] 
+        
     else:       
         lng_list = [item['lng'] for item in nearby]
         lat_list = [item['lat'] for item in nearby]
@@ -412,6 +451,7 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
             kw = kw_bird
         else: 
             locName_list = [item['locName'] for item in nearby] 
+            
             
         
     home_map = folium.Map(        
@@ -663,7 +703,7 @@ def addNewSpice(request):
                 )
                 new_spice.save()
                 message = f'Passarinho {name} cadastrado com sucesso.'                                        
-                save_img(name, url_spice_img)
+                save_img(name, url_spice_img)                
 
     except Exception as e:
         return JsonResponse({'error': str(e)})  
@@ -683,18 +723,17 @@ def addNewLocal(request):
             place = data.get('place','')
             latestObsDt = data.get('latestObsDt','')
             numSpeciesAllTime = data.get('numSpeciesAllTime','')
+            locId = data.get('locId','')
+            subnational2Code = data.get('subnational2Code','')                
             parts = data.get('subnational2Code','').split('-')
-            if len(parts) == 2:
-                locId = data.get('locId','')
-                subnational2Code = data.get('subnational2Code','')
+            if len(parts) >= 2:
                 country= subnational2Code.split('-')[0]
                 region = subnational2Code.split('-')[1]
             else:
-                locId = ''
-                subnational2Code = ''
-                
-                country= data.get('locId','')
-                region = data.get('subnational2Code','')
+            #    locId = ''
+            #    subnational2Code = ''                
+                country= data.get('country','')
+                region = data.get('state','')
 
             new_local = Place(
                 place=place,
@@ -799,18 +838,41 @@ def recent_observations_view(request):
 def mysightings(request):      
     mysightings = Sighting.objects.filter(birder=request.user)
     #print(request.user, mysightings)
+    page_number = request.GET.get('page')
+    error = None
+    page_obj = None    
+    
+    if mysightings:   
+        p = Paginator(mysightings, 10)        
+        page_obj = p.get_page(page_number)     
+        #print(f'pagenumber {page_number}')   
+    else:
+        error = 'Sem dados'   
     return render(request, "passarinhar/sightings_list.html", {
         "title":f"{request.user} - Meus avistamentos",
-        "sightings":mysightings
+        "page_obj":page_obj,
+        "form": SightingForm(),
+        "error": error
         })
 
 def allsightings(request):      
     allsightings = Sighting.objects.all()
     # order_by("-date_created").all()
+    page_number = request.GET.get('page')
+    error = None
+    page_obj = None    
+    if allsightings:   
+        p = Paginator(allsightings, 10)        
+        page_obj = p.get_page(page_number)     
+        #print(f'pagenumber {page_number}')   
+    else:
+        error = 'Sem dados'   
+    
     return render(request, "passarinhar/sightings_list.html", {
         "title":"Todos os avistamentos",
-        "sightings": allsightings,
-        "form": SightingForm()  
+        "page_obj":page_obj,
+        "form": SightingForm(),
+        "error":error
         })
 
 def sighting(request, sighting_id):
@@ -1084,3 +1146,60 @@ def addNewLike(request):
     return JsonResponse({
         "likes": currentPost.likes_count,
         "userlike": like})        
+
+
+from .ai_utils import synthesize_bird_dashboard
+def bird_profile_view(request):
+    xeno_canto_recordings =  None
+    xeno_data = None
+
+    if request.method == "POST":
+        bird_name = request.POST.get("bird_name", "Blue Jay").strip()
+        spice_code = request.POST.get("spice_code", "Blue Jay").strip()
+        pt_name = request.POST.get("pt_name", "Blue Jay").strip()
+        print(f"bird_profile_view {bird_name}, {spice_code} {pt_name}")
+        
+        # 1. Fetch live data from Xeno-canto API
+        print(f"bird_profile_view fetch_species_recordings {bird_name}")
+        xeno_data = fetch_species_recordings(bird_name, request.session["crnt-lat"], request.session["crnt-lon"])
+        xeno_canto_recordings = xeno_data['recordings']
+        #print(f"bird_profile_view xeno_data {xeno_data}")
+                        
+        # 2. Fetch your existing API data payloads
+        # (Mocking your current data structure for illustration)
+        print(f"bird_profile_view fetch_species_taxonomy {spice_code}")
+        ebird_data = fetch_species_taxonomy(spice_code)
+        #print(f"bird_profile_ebird_data {ebird_data}")
+        
+        weather_data = "68°F, Clear skies, light wind."
+        wiki_summary = "The blue jay is a passerine bird native to eastern North America."
+        title = bird_name + "|" + pt_name
+        url = f"https://pt.wikipedia.org/api/rest_v1/page/summary/{title}"
+        print(url)
+        headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)','cookie': 'SameSite=None,SameSite=None,SameSite=None'}
+
+        req = requests.get(url, headers=headers)
+        print(req.status_code)
+        # print(req.headers)
+        try:        
+            print(req.text['extract'])
+            wiki_summary = req.text['extract']
+        except:
+            wiki_summary = ''
+
+        # 3. Let Gemini synthesize it all for free!
+        ai_result = synthesize_bird_dashboard(
+            bird_name=bird_name,
+            ebird_data=ebird_data,
+            weather_data=weather_data,
+            wiki_summary=wiki_summary,
+            xeno_canto_recordings= xeno_canto_recordings # Safely passes the dictionary
+        )
+         # 4. Send the text and audio stream back to the UI
+        return JsonResponse({
+            "bird": bird_name,
+            "ai_report_text": ai_result["summary"],
+            "audio_url": ai_result["audio_url"]
+        })
+        
+    return render(request, "birdie/profile.html")

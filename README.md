@@ -1,6 +1,7 @@
 # Maria Amado Domínguez - Pasarinhando
 
-This is a birdwatching website with information about Debossan, a neighborhood in Nova Friburgo, in the mountains of Rio de Janeiro, Brazil. It focuses on the local birdlife and uses resources from eBird, Xenocanto, Wikipedia, and Wikimedia Commons. The project was built using open-source tools and is not intended for commercial use.
+This is a birdwatching website with information about Debossan, a neighborhood in Nova Friburgo, in the mountains of Rio de Janeiro, Brazil. It focuses on the local birdlife but can be used anywhere else.
+It get resources from eBird, Xenocanto, Wikipedia, and Wikimedia Commons. The project was built using open-source tools and is not intended for commercial use.
 
 It has the following functionality:
 
@@ -41,37 +42,18 @@ Use XenoCanto's API to recover bird sounds
 
 
 # Wikipedia 
-Use Wikimedia's API to recover images  
+Use Wikimedia's API to recover images 
+MediaWiki REST APIs to get the bird's page summary info 
 
   * Doc  
     https://www.mediawiki.org/w/api.php?action=help&modules=query%2Bpageimages   
-    https://www.mediawiki.org/wiki/Wikimedia_REST_API  
-
+    https://www.mediawiki.org/wiki/Wikimedia_REST_API
+    https://www.mediawiki.org/wiki/API:REST_API  
+    
   * Api endpoints
     1. en.wikipedia.org|pageterms&piprop=thumbnail&pithumbsize=500&titles=jacuguaçu   
     2. pt.wikipedia.org/w/api.php?action=query&prop=pageimages|pageprops&format=json&pithumbsize=300&titles=japu   
-  headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)'}  
-  * Example  
-    1. Search for image information  
-    url_imagem = 'File:Example.jpg'  // Substitute by the name of the file  
-    name_file_api = url_imagem.split('/')[-1].replace('File:', '') // Get the name of the file for the API (remove the 'File:')  
-    params_info = { 'action': 'query', 'prop': 'imageinfo', 'titles': f'File:{name_file_api}', 'format': 'json', 'iiprop': 'url'  
-    // Get the URL of the image} 
-    response_info = requests.get(f"pt.wikipedia.org", params=params_info) 
-    data_info = response_info.json() 
-    2. Show the raw data  
-    Accessing the image URL (example, may vary depending on the JSON structure) 
-    Navigate through the structure to find the actual URL  
-    Ex: print(data_info['query']['pages']['-1']['imageinfo'][0]['url']) 
-
-{"batchcomplete":"","query":  
-{"pages":{"599489":  
-{"pageid":599489,"ns":0,"title":"Penelope",  
-"thumbnail":{"source":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Penelope_jacquacu01.jpg/60px-Penelope_jacquacu01.jpg","width":50,"height":39},  
-"pageimage":"Penelope_jacquacu01.jpg",  
-"pageprops":{"displaytitle":"<i>Penelope</i>","page_image_free":"Penelope_jacquacu01.jpg","wikibase_item":"Q1071983"}  
-}  }  }  }  
-
+    3. pt.wikipedia.org/api/rest_v1/page/summary/
 # OpenWeather
 Use OpenWeather to fetch geodata
 

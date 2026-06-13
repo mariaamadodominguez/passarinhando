@@ -13,11 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radioButtons) {
         placeField = document.getElementById('id_place');
     }
-    // console.log('Radio button selected:', radioButtons);
     radioButtons.forEach(radio => {
         radio.addEventListener('change', function () {
             // This code runs immediately when a selection is changed
-            console.log('Radio button selected:', this.value);
+            // console.log('Radio button selected:', this.value);
             if (this.value === 'L') {
                 placeField.style.display = 'block';
                 placeField.required = true
@@ -25,14 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 placeField.style.display = 'none';
                 placeField.required = false
             }
-            console.log('placeField.style.display:', placeField, placeField.style.display);
+            //console.log('placeField.style.display:', placeField, placeField.style.display);
         });
     });
-    /*const firstRadio = document.querySelector('input[name="tipo_procura"]');
-    if (firstRadio) {
-        firstRadio.focus();
-        firstRadio.click();
-    }*/
+
     const procRadio = document.querySelector('input[name="tipo_procura"]');
     if (procRadio && procRadio.checked) {
         if (procRadio.value == 'R') {
@@ -43,16 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
             placeField.required = true;
         }
     }
+
     function saveLocal(local_id) {
         url = '/addNewLocal'
         //console.log(url, local_id); 
-        //console.log( document.querySelector(`#name${local_id}`).innerHTML);
-        //console.log( document.querySelector(`#locId${local_id}`).innerHTML);
+        //console.log(document.querySelector(`#name${local_id}`).innerHTML);
+        //console.log(document.querySelector(`#locId${local_id}`).innerHTML);
         //console.log(document.querySelector(`#subnational2Code${local_id}`).innerHTML);
-        //console.log( document.querySelector(`#lat${local_id}`).innerHTML);
-        //console.log( document.querySelector(`#lon${local_id}`).innerHTML);
+        //console.log(document.querySelector(`#lat${local_id}`).innerHTML);
+        //console.log(document.querySelector(`#lon${local_id}`).innerHTML);
         //console.log(document.querySelector(`#latestObsDt${local_id}`).innerHTML);
-        //console.log( document.querySelector(`#numSpeciesAllTime${local_id}`).innerHTML);
+        //console.log(document.querySelector(`#numSpeciesAllTime${local_id}`).innerHTML);
 
         fetch(url, {
             headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
@@ -65,8 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 locId: document.querySelector(`#locId${local_id}`).innerHTML,
                 latestObsDt: document.querySelector(`#latestObsDt${local_id}`).innerHTML,
                 numSpeciesAllTime: document.querySelector(`#numSpeciesAllTime${local_id}`).innerHTML,
-                //country : document.querySelector(`#country${local_id}`).innerHTML,
-                //state : document.querySelector(`#state${local_id}`).innerHTML,
+                country: document.querySelector(`#country${local_id}`).innerHTML,
+                state: document.querySelector(`#state${local_id}`).innerHTML,
             })
         }
         )
