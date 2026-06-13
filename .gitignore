@@ -1,5 +1,6 @@
 __pycache__/
 *.py[cod]
+migrations/
 passarinhar/__pycache__/admin.cpython-312.pyc
 passarinhar/__pycache__/forms.cpython-312.pyc
 passarinhar/__pycache__/models.cpython-312.pyc
