@@ -551,20 +551,16 @@ def bird_of_the_day_view(request):
                 request.session["crnt-lat"],
                 request.session["crnt-lon"],
                 sort = 'date') 
-                
-            if len(recent_observations_data['data']) > 0 :     
-                # print(recent_observations_data['data'][0]['comName'])
-                latlng = recent_observations_data['data']   
-                # print(f'latlng{latlng}')                                             
-                DZS_name=recent_observations_data['data'][0]['sciName']
-                try:
-                    bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)
-                    bird = [bird for bird in bird_data] # Or use list(queryset)
+                            
+            if len(recent_observations_data.get('data', [])) > 0:
+                latlng = recent_observations_data['data']                 
+                DZS_name = recent_observations_data['data'][0]['sciName']
+                # Fetching bird safely
+                bird_data = DataZoneSpecie.objects.filter(Scientific_name=DZS_name)
+                if bird_data.exists():
                     bird = serializers.serialize('json', bird_data)
-                except DataZoneSpecie.DoesNotExist:
-                    # Handle the case where the object doesn't exist                    
-                    print({f"error": "Record {comName} not found."}, status=404)
-                    bird = None                                                                        
+                else:
+                    bird = None  # Or structure an error object
         
                 home_map = show_on_map(request.session["crnt-lat"], request.session["crnt-lon"], "bird", latlng, zoom_start = 10)
                 map_html = home_map._repr_html_() 
@@ -575,9 +571,11 @@ def bird_of_the_day_view(request):
                     }, content_type='application/json') 
             else:
                 return JsonResponse({'error': 'Nenhuma ave encontrada!'})
-                               
+        # FIX: Add a return for when the content-type is NOT application/json
+        return render(request, 'passarinhar/bird_of_the_day.html')                        
     except Exception as e:
-       return JsonResponse({'error': str(e)})
+        
+       return JsonResponse({'error': str(e)}, status=500)
 
 def taxonomy_view(request):
 
@@ -1148,58 +1146,3 @@ def addNewLike(request):
         "userlike": like})        
 
 
-from .ai_utils import synthesize_bird_dashboard
-def bird_profile_view(request):
-    xeno_canto_recordings =  None
-    xeno_data = None
-
-    if request.method == "POST":
-        bird_name = request.POST.get("bird_name", "Blue Jay").strip()
-        spice_code = request.POST.get("spice_code", "Blue Jay").strip()
-        pt_name = request.POST.get("pt_name", "Blue Jay").strip()
-        print(f"bird_profile_view {bird_name}, {spice_code} {pt_name}")
-        
-        # 1. Fetch live data from Xeno-canto API
-        print(f"bird_profile_view fetch_species_recordings {bird_name}")
-        xeno_data = fetch_species_recordings(bird_name, request.session["crnt-lat"], request.session["crnt-lon"])
-        xeno_canto_recordings = xeno_data['recordings']
-        #print(f"bird_profile_view xeno_data {xeno_data}")
-                        
-        # 2. Fetch your existing API data payloads
-        # (Mocking your current data structure for illustration)
-        print(f"bird_profile_view fetch_species_taxonomy {spice_code}")
-        ebird_data = fetch_species_taxonomy(spice_code)
-        #print(f"bird_profile_ebird_data {ebird_data}")
-        
-        weather_data = "68°F, Clear skies, light wind."
-        wiki_summary = "The blue jay is a passerine bird native to eastern North America."
-        title = bird_name + "|" + pt_name
-        url = f"https://pt.wikipedia.org/api/rest_v1/page/summary/{title}"
-        print(url)
-        headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)','cookie': 'SameSite=None,SameSite=None,SameSite=None'}
-
-        req = requests.get(url, headers=headers)
-        print(req.status_code)
-        # print(req.headers)
-        try:        
-            print(req.text['extract'])
-            wiki_summary = req.text['extract']
-        except:
-            wiki_summary = ''
-
-        # 3. Let Gemini synthesize it all for free!
-        ai_result = synthesize_bird_dashboard(
-            bird_name=bird_name,
-            ebird_data=ebird_data,
-            weather_data=weather_data,
-            wiki_summary=wiki_summary,
-            xeno_canto_recordings= xeno_canto_recordings # Safely passes the dictionary
-        )
-         # 4. Send the text and audio stream back to the UI
-        return JsonResponse({
-            "bird": bird_name,
-            "ai_report_text": ai_result["summary"],
-            "audio_url": ai_result["audio_url"]
-        })
-        
-    return render(request, "birdie/profile.html")

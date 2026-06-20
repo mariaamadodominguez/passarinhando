@@ -31,9 +31,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Reads from .env; defaults to False if the variable is missing
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['passarinhar.pythonanywhere.com', '127.0.0.1']
+
+ALLOWED_HOSTS = [
+    'passarinhar.pythonanywhere.com',   # live PythonAnywhere URL
+    'localhost',                        # local computer testing
+    '127.0.0.1',                        # local computer testing (IP)
+]
 
 
 # Application definition
@@ -126,7 +132,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+# The absolute path to the directory where collectstatic will collect static files for deployment
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type  
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
