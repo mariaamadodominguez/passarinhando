@@ -151,12 +151,14 @@ export const getCurrentLocation = async () => {
     }
 }
 
-export const getXenoCanto = async (spice_code, scientific_name) => {
+export const getXenoCanto = async (spice_code, scientific_name, limit = 3) => {
+
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/bird_player_view';
-    var selector = `#player${spice_code}`;
-    console.log(selector, spice_code, scientific_name)
-    document.querySelector(selector).innerHTML = "";
+    var selector = `player${spice_code}`;
+    const targetSelector = document.querySelector(`#${CSS.escape(selector)}`);
+    targetSelector.innerHTML = "";
+
     await fetch(url, {
         method: 'POST',
         headers: {
@@ -171,20 +173,66 @@ export const getXenoCanto = async (spice_code, scientific_name) => {
     })
         .then(response => response.json())
         .then(res => {
-            //console.log('res', res)
+            console.log('res', res)
             const recordings = res.recordings.recordings
-            if (recordings)
-                for (var i = 0; i < recordings.length && i < 3; i++) {
-                    //console.log('recordings', recordings[i].file)
-                    const xenoframe = document.createElement('iframe');
-                    xenoframe.src = `https://xeno-canto.org/${recordings[i].id}/embed?simple=1`;
-                    xenoframe.style.border = "none";
-                    xenoframe.style.overflow = "hidden";
-                    document.querySelector(selector).append(xenoframe);
-                }
-        })
+            if (recordings) {
+                // Switch to HTML5 Native Audio (<audio>)
+                for (var i = 0; i < recordings.length && i < limit; i++) {
+                    // Create the native audio player using the direct stream link
+                    const nativeAudio = document.createElement('audio');
+                    nativeAudio.src = recordings[i].file; // Uses the direct audio streaming link from JSON
+                    nativeAudio.controls = true;          // Displays native browser Play/Pause/Timeline controls
+                    nativeAudio.classList.add('custom-audio-player');
 
+                    if (limit == 1) { // No details, append audio directly to your target selector
+                        targetSelector.append(nativeAudio);
+                    } else { // include  recording details
+                        // 1. Create a wrapper card container
+                        const cardContainer = document.createElement('div');
+                        cardContainer.classList.add('audio-card');
+
+                        // 2. Create a metadata container box for recording details
+                        const metaContainer = document.createElement('div');
+                        metaContainer.classList.add('audio-meta-box');
+                        // Recordist element
+                        const recordistDiv = document.createElement('div');
+                        recordistDiv.innerHTML = `👤 <strong>Gravador:</strong> ${recordings[i].rec}`;
+                        // Location element
+                        const locationDiv = document.createElement('div');
+                        locationDiv.innerHTML = `📍 <strong>Local:</strong> ${recordings[i].loc}, ${recordings[i].cnt}`;
+                        //type, sex,stage
+                        const type_sex_stageDiv = document.createElement('div');
+                        type_sex_stageDiv.innerHTML = `<strong>tipo:</strong> ${recordings[i].type}`;
+                        if (recordings[i].sex != '') {
+                            type_sex_stageDiv.innerHTML += ` <strong>genero:</strong>${recordings[i].sex}`
+                        }
+                        if (recordings[i].stage != '') {
+                            type_sex_stageDiv.innerHTML += `${recordings[i].stage}`
+                        }
+
+                        // Source Link element (Opens in a new browser tab)
+                        const sourceLink = document.createElement('a');
+                        sourceLink.href = `https://xeno-canto.org/${recordings[i].id}`;
+                        sourceLink.target = "_blank";
+                        sourceLink.rel = "noopener noreferrer";
+                        sourceLink.classList.add('xc-source-link');
+                        sourceLink.textContent = "Ver gravação original em Xeno-canto ↗";
+                        // Assemble metadata items
+                        metaContainer.append(recordistDiv);
+                        metaContainer.append(locationDiv);
+                        metaContainer.append(type_sex_stageDiv);
+                        metaContainer.append(sourceLink);
+
+                        // 3. Assemble and append the full card structure
+                        cardContainer.append(nativeAudio);
+                        cardContainer.append(metaContainer); // Injected below the audio track timeline
+                        targetSelector.append(cardContainer);
+                    }
+                }
+            }
+        })
 }
+
 export const getTaxonomy = async (spice_code) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/taxonomy_view';

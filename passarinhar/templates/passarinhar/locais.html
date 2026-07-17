@@ -97,7 +97,7 @@
         </div>
         <ul>
             <li>Id. do local
-                <a href="{% url 'passarinhar:localrecents' ' ' local.locId local.locName%}"> <span
+                <a href="{% url 'passarinhar:hotspot' local.locId%}"> <span
                         id="locId{{forloop.counter0}}">{{local.locId}}</span></a>
             </li>
             <li>Código da região <span id="subnational2Code{{forloop.counter0}}">{{ local.subnational2Code}}</li>

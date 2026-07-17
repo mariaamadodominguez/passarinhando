@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelector('#player').append(player);
                 document.getElementById(`bird-of-the-day`).style.display = "block";
 
-                getXenoCanto(data[0].speciesCode, data[0].sciName)
+                getXenoCanto(data[0].speciesCode, data[0].sciName, 1)
                 document.getElementById(`debossan`).innerHTML = res.debossan_map;
 
             })

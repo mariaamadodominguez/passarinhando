@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     bird_imgs.forEach(async function (_img) {
         //console.log(_img.alt, _img.id);
         _img.src = await searchWikiData(_img.id, _img.alt);
-        getXenoCanto(_img.id, _img.alt);
+        getXenoCanto(_img.id, _img.alt, 1);
     })
 
     // Get all radio buttons in the 'my_choice' group

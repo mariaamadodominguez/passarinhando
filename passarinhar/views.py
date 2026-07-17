@@ -18,25 +18,156 @@ import json
 import os
 import requests
 import urllib.request
+import math
+
+HOTSPOT_INFO_URL = "https://api.ebird.org/v2/ref/hotspot/info/%s"
+LOCATION_INFO_URL = "https://api.ebird.org/v2/ref/region/info/%s"
+
+def fetch_hotspot(loc_id):
+    # return: the latitude, longitude, name, region, etc. for the hotspot.
+
+    # url = HOTSPOT_INFO_URL % clean_location(loc_id)
+    api_key = settings.EBIRD_API_KEY
+    data = ''
+    locale = "pt-br"
+    url = f"https://api.ebird.org/v2/ref/hotspot/info/{loc_id}"
+    # print(url)
+    payload = {}
+    headers = {
+      'X-eBirdApiToken': api_key
+    }    
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent 
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response
+        # print(response.json())  
+        data = response.json()
+        print(data)  
+    return {
+        'data': data 
+    }
+
+def fetch_location(loc_id):
+    try:
+        return fetch_hotspot(loc_id)
+    except HTTPError as err:
+        if err.code != 410:
+            raise
+    api_key = settings.EBIRD_API_KEY
+    data=''
+    locale = "pt-br"
+    url = f"https://api.ebird.org/v2/ref/region/info/{loc_id}"
+    # print(url)
+    payload={}
+    headers = {
+      'X-eBirdApiToken': api_key
+    }    
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent 
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response
+        print(response.json())  
+        data = response.json()
+        
+        result = {
+        "locId": data["code"],
+        "name": data["result"],
+        "latitude": data["latitude"],
+        "longitude": data["longitude"],
+        "isHotspot": False,
+        "locName": data["result"],
+        "lat": data["latitude"],
+        "lng": data["longitude"],
+        "locID": data["code"],
+        }
+
+        # Get all the parent regions in reverse order
+        items = [data["parent"]]
+        while "parent" in items[-1]:
+            items.append(items[-1].pop("parent"))
+        parents = items[::-1]
+
+        # if the name contains the parent, remove it
+        full_name = ", " + parents[0]["result"]
+        for parent in parents[1:]:
+            if parent["result"].endswith(full_name):
+                parent["result"] = parent["result"][: -len(full_name)]
+            full_name = ", " + parent["result"] + full_name
+
+        # Add the processed regions to the record
+        for parent in parents:
+            kind = parent["type"]
+            name = parent["result"]
+            result["%sName" % kind] = name
+            result["%sCode" % kind] = parent["code"]
+        result["hierarchicalName"] = result["name"] + full_name
+    return result
+
+
+def calculate_xc_box(lat: float, lon: float, radius_km: float) -> str:
+    """Calculates box bounds around a center point for Xeno-canto API."""
+    # Convert string variables to floats to prevent TypeErrors
+    lat = float(lat)
+    lon = float(lon)
+    # Earth's radius constants
+    km_per_degree_lat = 111.0
+
+    radius_km = 100.0
+    # Latitude offset
+    delta_lat = radius_km / km_per_degree_lat
+    lat_min = lat - delta_lat
+    lat_max = lat + delta_lat
+
+    # Longitude offset varies based on how close you are to the poles
+    # math.cos expects radians, so we convert latitude to radians
+    cos_lat = math.cos(math.radians(lat))
+
+    # Avoid division by zero at the exact poles
+    if abs(cos_lat) > 1e-6:
+        delta_lon = radius_km / (km_per_degree_lat * cos_lat)
+    else:
+        delta_lon = 0.0
+
+    lon_min = lon - delta_lon
+    lon_max = lon + delta_lon
+
+    # Format exactly as box:LAT_MIN,LON_MIN,LAT_MAX,LON_MAX (round to 4 decimals)
+    return f"box:{lat_min:.4f},{lon_min:.4f},{lat_max:.4f},{lon_max:.4f}"
 
 def fetch_species_recordings(species_code, lat='', lon=''):
     apikey = settings.XENO_API_KEY
+    ppage = "50"
+    reclen = "15-30"
+    country = "brazil"
+    radius = 50.0  # 50 kilometers radius
+    
     data=''    
     api_url = f"https://xeno-canto.org/api/3/recordings"
+    query_string = f'sp:"{species_code}" cnt:{country}'
+    query_string += f" len:{reclen}"
     if lat != '' and lon != '':
-        params = {
-            'query': f"sp:\"{species_code}\"",
+        # Calculate the tag
+        
+        box_tag = calculate_xc_box(lat, lon, radius)
+        # print(f'{box_tag}')
+        query_string += f" {box_tag}"
+
+    params = {
+            'query': query_string,       
             'key': apikey,
-            'len':"15-30",
-            'lat': lat,
-            'lon': lon
-        }
-    else:
-        params = {
-            'query': f"sp:\"{species_code}\"",
-            'key': apikey
-        }
-    print(params)
+            "per_page": ppage
+    }
+    # print(params)
     try:
         response = requests.request("GET", api_url, params=params, timeout=5) # timeout to prevent 
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
@@ -162,20 +293,19 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dis
     api_key = settings.EBIRD_API_KEY 
     maxResults = howmany
     data = ''
-    if lat == '':
-        #print(f'fetch_recent_observations_in_a_region {lon}- {region}')
+    if lat == '' or lon == '':
+        # print(f'fetch_recent_observations_in {region}')
         url = f"https://api.ebird.org/v2/data/obs/{region}/recent?sppLocale={locale}&maxResults={str(maxResults)}&detail=full"
     else:
-        #print(f'fetch_recent_observations_in_a_LoC {lat} {lon}')
+        # print(f'fetch_recent_observations_in {lat} {lon}')
         url = f"https://api.ebird.org/v2/data/obs/geo/recent?lat={lat}&lng={lon}&sort={sort}&dist={dist}&sppLocale={locale}&maxResults={str(maxResults)}&detail=full"       
-        
-    #(url)
+            
     payload={}
     headers = {
       'X-eBirdApiToken': api_key
     }    
     try:
-        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) # timeout to prevent indefinite waits        
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) 
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
         # print(api_key, response.text)
     except Exception as err:
@@ -189,6 +319,39 @@ def fetch_recent_observations_in_a_region(lat, lon, howmany= 1, sort='date', dis
     return {
         'data': data 
     }
+
+def fetch_recent_observations_in_a_loc(local_id, howmany= 10, locale= "pt-br"):
+    api_key = settings.EBIRD_API_KEY    
+    data = ''
+    print(f'fetch_recent_observations_in_a_loc {local_id}')
+    url = f"https://api.ebird.org/v2/data/obs/{local_id}/recent?sppLocale={locale}&maxResults={str(howmany)}&back=30&detail=full"
+    payload={}
+    headers = {
+      'X-eBirdApiToken': api_key
+    }    
+    try:
+        response = requests.request("GET", url, headers=headers, data=payload, timeout=5) 
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        print(api_key, response.text)
+    except Exception as err:
+        # Handle any other potential exceptions
+        print(f"An unexpected error occurred: {err}")
+    else:
+        print(f"Success! Response status code for {url} is {response.status_code}")
+        # Process the successful response, e.g., 
+        data = response.json()
+    return {
+        'data': data 
+    }
+
+def fetch_geo_data(city, limit):
+    api_key = settings.OPEN_WEATHER_KEY
+    url = f'http://api.openweathermap.org/geo/1.0/direct?q=={city}&appid={api_key}&limit={limit}'
+    response = requests.get(url)
+    data = response.json()
+    return {
+        'data': data
+    }        
 
 def allplaces(request):    
     error = None
@@ -301,6 +464,21 @@ def allspices(request):
         "error": error
         })
 
+def spice_detail(request, spice_id):
+    try:
+        currentSpice = Spice.objects.get(id=spice_id)           
+        #home_map = show_on_map(place[0].lat, place[0].lon, "favourite", place)      
+        #map_html = home_map._repr_html_() 
+    except Spice.DoesNotExist:
+        raise Http404("Sighting not found.")
+
+    return render(request, "passarinhar/spice_detail.html", {
+        #"home_map": map_html,
+        "title":f"{currentSpice.name}",
+        "spice": currentSpice,                 
+    })
+
+
 def addFavourite(request):    
     data = json.loads(request.body)    
     place_id = data.get('place_id','')
@@ -354,14 +532,6 @@ def favourites(request):
         "error": error   
         })          
                     
-def fetch_geo_data(city, limit):
-    api_key = settings.OPEN_WEATHER_KEY
-    url = f'http://api.openweathermap.org/geo/1.0/direct?q=={city}&appid={api_key}&limit={limit}'
-    response = requests.get(url)
-    data = response.json()
-    return {
-        'data': data
-    }        
 
 def geo_view(request):
     title = 'Coordenadas geográficas (latitude e longitude)'
@@ -409,13 +579,13 @@ def hotspots_nearby_view(request):
         error = 'Nenhum local encontrado!' 
         hotspots_nearby_data = None
     else:
-        hotspots_nearby_data = hotspots_nearby_data['data']
-        home_map = show_on_map(latitude, longitude, "hotspot", hotspots_nearby_data)
-        map_html = home_map._repr_html_()   
-        p = Paginator(hotspots_nearby_data, 10)
+        # hotspots_nearby_data = hotspots_nearby_data['data']
+        p = Paginator(hotspots_nearby_data['data'], 10)
         page_number = request.GET.get('page')
         page_obj = p.get_page(page_number)                   
-
+        home_map = show_on_map(latitude, longitude, "hotspot", page_obj)
+        map_html = home_map._repr_html_()   
+        
     return render(request, "passarinhar/locais.html", {
             "title":title,
             "form": form,
@@ -424,36 +594,30 @@ def hotspots_nearby_view(request):
             "page_obj":page_obj
         })
 
-def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
+def show_on_map(latitude, longitude, type, nearby, zoom_start=12, home_label = "Sua localização"):
     kw_bird = {"prefix": "fa", "color": "green", "icon": "crow"}
     kw_house = {"prefix": "fa", "color": "blue", "icon": "house"}
     kw = {"color": "blue"}    
     headers = {
     "User-Agent": "PAssarinhar/1.0 (contact: mardomngz@gmail.com)",
     #"referrer" : "no-referrer-when-downgrade"
-    }
-
+    }    
     #spice_map = show_on_map(latitude, longitude, "nearest", latlng, zoom_start = 10)
-    if type == "favourite" or type == "allplaces":
-        locName_list = [item.place for item in nearby] 
+    if type == "favourite" or type == "allplaces":        
         lng_list = [item.lon for item in nearby]
-        lat_list = [item.lat for item in nearby]        
-    elif type == "nearest":
-        lng_list = [item['lng'] for item in nearby]
-        lat_list = [item['lat'] for item in nearby]
-        locName_list = [f"{item['locName']} - {item['obsDt']}" for item in nearby] 
-        
+        lat_list = [item.lat for item in nearby]  
+        locName_list = [item.place for item in nearby]               
     else:       
         lng_list = [item['lng'] for item in nearby]
         lat_list = [item['lat'] for item in nearby]
         if type == 'bird':
             locName_list = [item['comName'] for item in nearby] 
             kw = kw_bird
+        elif type == "nearest":
+            locName_list = [f"{item['locName']} - {item['obsDt']}" for item in nearby]     
         else: 
             locName_list = [item['locName'] for item in nearby] 
-            
-            
-        
+                                
     home_map = folium.Map(        
         location=[latitude, longitude], 
         zoom_start=zoom_start,
@@ -467,8 +631,10 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
     ).add_to(home_map)
 
     # instantiate a feature group for the nearby stations in the dataframe
+    
     nearby_places = folium.map.FeatureGroup()
-    for lat, lng, in zip(lat_list, lng_list):
+    for lat, lng, in zip(lat_list, lng_list):        
+        
         nearby_places.add_child(
             folium.features.CircleMarker(
                 [lat, lng],
@@ -481,7 +647,7 @@ def show_on_map(latitude, longitude, type, nearby, zoom_start=12):
         )
 
     # add pop-up text to each marker on the map        
-    home_label = "Sua localização"        
+    # home_label = "Sua localização"        
     for lat, lng, label in zip(lat_list, lng_list, locName_list):    
         try:    
             if f"{lat:.7f}" ==f"{latitude:.7f}"  and f"{lng:.7f}" == f"{longitude:.7f}":
@@ -528,15 +694,15 @@ def get_data_zone_specie(request):
     
 
 def bird_player_view(request):
-    print('bird_player_view')
+    # print('bird_player_view')
     if request.headers.get('content-type') == 'application/json':      
         data = json.loads(request.body)    
         species_code = data.get('species_code','')
         lat = data.get('lat','')
         lon = data.get('lon','')
-        #print(species_code, lat, lon)
+        # print(species_code, lat, lon)
         recordings = fetch_species_recordings(species_code, lat, lon)
-        #print(recordings)
+        # print(recordings)
         return JsonResponse({
             'recordings':recordings
         }, content_type='application/json') 
@@ -578,7 +744,6 @@ def bird_of_the_day_view(request):
        return JsonResponse({'error': str(e)}, status=500)
 
 def taxonomy_view(request):
-
     try:        
         if request.headers.get('content-type') == 'application/json':      
             data = json.loads(request.body)    
@@ -753,62 +918,107 @@ def addNewLocal(request):
             
     return JsonResponse({"message": message})
 
+def hotspot(request, loc_id):
+    title = f"Informações do local {loc_id}"       
+    error = ''
+    hotspot_data = None
+    map_html = None
+    max_views = 30   
+
+    location_data = fetch_location(loc_id)
+    if len(location_data['data']) == 0 :
+        error = 'Nenhuma informação encontrada!'
+    else:
+        hotspot_data = location_data['data']
+        title = f"Informações do local {hotspot_data['locName']} - [{loc_id}]"       
+        # map with local and species
+        lat = hotspot_data['latitude']
+        lon = hotspot_data['longitude']
+        
+        recent_observations_data = fetch_recent_observations_in_a_loc(loc_id)        
+        try:
+            if len(recent_observations_data['data']) == 0 :
+                print(f'map with no recent_observations_data ')                
+            else:                
+                print(f'map with recent_observations_data {recent_observations_data['data']}')
+            
+            _map = show_on_map(lat, lon, "nearest", [], zoom_start = 10, home_label=hotspot_data['locName'])                                   
+            map_html = _map._repr_html_() 
+        except Exception as err:
+            print(f"An unexpected error occurred: {err}")
+    return render(request, "passarinhar/location_detail.html", {
+            "title":title,
+            "error":error,
+            "hotspot":hotspot_data,
+            "recent_obs": recent_observations_data['data'],
+            "map":map_html
+                  })
+
 def localrecents(request, lat, lon, place):
     recent_observations_data = None
     error = None
     page_number = request.GET.get('page')                      
     max_views = 30   
-    if lat == ' ': 
-        # search by região name
-        recent_observations_data = fetch_recent_observations_in_a_region('', lon, max_views, region=lon, sort='species')
-        title = f"Avistamentos recentes em {place} [{lon}]"
-    else:
-        # search by coords
-        recent_observations_data = fetch_recent_observations_in_a_region(lat, lon, max_views, dist=15, sort='species')
-        title = f"Avistamentos recentes perto de {place}"   
+    
+    # search by coords
+    recent_observations_data = fetch_recent_observations_in_a_region(lat, lon, max_views, dist=15, sort='species')
+    title = f"Avistamentos recentes perto de {place}"   
         
     if len(recent_observations_data['data']) == 0 :
         page_obj = None
+        map_html = None
         error = 'Nenhuma observação recente encontrada!'
     else:
         p = Paginator(recent_observations_data['data'], 10)                
         page_obj = p.get_page(page_number)
+        # map with local and species
+        #home_map = show_on_map(lat, lon, "bird", recent_observations_data['data'], zoom_start = 10, home_label=place)
+        home_map = show_on_map(lat, lon, "bird", page_obj, zoom_start = 10, home_label=place)
+        map_html = home_map._repr_html_() 
     return render(request, "passarinhar/recentes.html", {
             "title":title,
             "error":error,
             "type_page":'local',            
-            "page_obj":page_obj
+            "page_obj":page_obj,
+            "map":map_html
                   })
     
 def recent_observations_view(request):
     error = None
     page_obj = None    
+    map_html = None
     howmany = 15
     sort_value = 'date'
     dist = 15
     latitude = request.session["crnt-lat"]
     longitude = request.session["crnt-lon"]                
     title = 'Avistamentos recentes na região'
+    home_label = 'Sua localização'
     form = RecentsForm(request.GET)
     if form.is_valid():
         howmany = int(form.cleaned_data['quantos'])
         dist = int(form.cleaned_data['dist'])
-        selected_value = form.cleaned_data['tipo_procura']  
-        place_object = form.cleaned_data['place']      
+        selected_value = form.cleaned_data['tipo_procura']          
         order_type = form.cleaned_data['tipo_ordem']  
-          
+        place_object = form.cleaned_data['place']                      
+
         if order_type == 'D':
             sort_value ='date'
         else:
             sort_value = 'species'
-        if selected_value == 'N':                
-            title = f"Avistamentos notáveis perto de {place_object.place}"                 
+
+        if selected_value == 'N':                            
+            latitude = place_object.lat
+            longitude = place_object.lon 
+            home_label = place_object.place  
+            title = f"Avistamentos notáveis perto de {home_label}"
             recent_observations_data = fetch_recent_nearby_notable_observations(latitude,longitude, dist)
         else :
-            if selected_value == 'L': # local 
-                title = f"Avistamentos recentes perto de {place_object.place}"
+            if selected_value == 'L': # local                 
                 latitude = place_object.lat
-                longitude = place_object.lon                                    
+                longitude = place_object.lon 
+                home_label = place_object.place                                     
+                title = f"Avistamentos recentes perto de {home_label}"
             else:                     # nearby)  
                 title = 'Avistamentos recentes na região'                        
             recent_observations_data = fetch_recent_observations_in_a_region(latitude,longitude,howmany, sort_value, dist)                                
@@ -825,12 +1035,16 @@ def recent_observations_view(request):
             page_obj = p.get_page(1)                
         else:
             page_obj = p.get_page(request.GET.get('page'))                
+        home_map = show_on_map(latitude, longitude, "recents", page_obj, zoom_start = 10, home_label=home_label)
+        map_html = home_map._repr_html_() 
+        
     return render(request, "passarinhar/recentes.html", {
         "title": title,
         "form": form,
         "error":error,            
         "type_page":'recentes',            
-        "page_obj":page_obj
+        "page_obj":page_obj,
+        "map":map_html
         })
 
 def mysightings(request):      

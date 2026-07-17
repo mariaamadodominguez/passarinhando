@@ -71,10 +71,11 @@
                 {% endif %}
             </h3>
             {% if place.locId != ''%}
-            <div>Id. do local: <span id="locId{{ place.locId }}">
-                    <a href="{% url 'passarinhar:localrecents' ' ' place.locId place.place%}">
-                        {{place.locId}}</a>
-                </span></div>
+            <div>Id. do local:
+                <span id="locId{{ place.locId }}">
+                    <a href="{% url 'passarinhar:hotspot' place.locId%}">{{place.locId}}</a>
+                </span>
+            </div>
             {% endif%}
             <div>{{ place.subnational2Code }}</div>
             <div>{{ place.region }} [{{ place.country }}]

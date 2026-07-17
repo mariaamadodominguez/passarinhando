@@ -179,3 +179,93 @@ h5 {
     margin-top: 10px;
   }
 }
+
+/* Container card for each bird recording entry */
+.audio-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 450px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Subtle hover effect for interactivity */
+.audio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Custom dimensions for the audio player bar */
+.custom-audio-player {
+  /*width: 100%;*/
+  height: 40px;
+  display: block;
+  border-radius: 8px;
+  outline: none;
+}
+
+/* 🧪 Advanced Browser Styling Control (Webkit engines like Chrome, Edge, Safari) */
+.custom-audio-player::-webkit-media-controls-panel {
+  background-color: #f1f3f5;
+  border-radius: 8px;
+}
+
+.custom-audio-player::-webkit-media-controls-play-button {
+  background-color: #2ecc71;
+  /* Green accents look clean for wildlife apps */
+  border-radius: 50%;
+  transform: scale(1.1);
+}
+
+.custom-audio-player::-webkit-media-controls-current-time-display,
+.custom-audio-player::-webkit-media-controls-time-remaining-display {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Metadata layout styling container */
+.audio-meta-box {
+  /*margin-top: 14px;*/
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  /* Soft visual separation line */
+  font-size: 0.85rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* Add spacing between separate metadata text rows */
+.audio-meta-box div {
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Prevents long town strings from wrapping breaking grid blocks */
+}
+
+/* Clear typography styling for strong label markers */
+.audio-meta-box strong {
+  color: #718096;
+  font-weight: 600;
+}
+
+/* Clean, interactive hyperlink styling for citations */
+.xc-source-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+/* Anchor hover highlight states */
+.xc-source-link:hover {
+  color: #2b6cb0;
+  text-decoration: underline;
+}

@@ -1,0 +1,36 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
+<div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
+{% endif %}
+<h2 id="page-title">{{ title }}</h2>
+<div style="display:none">
+    <span id="spice-id">{{spice.id}}</span>
+    <span id="spice-name{{spice.id}}" class="text-capitalize font-weight-bold">{{ spice.name }}</span>
+    <span id="spice-scientific-name{{spice.id}}" class="text-capitalize font-italic ">{{spice.scientific_name}}</span>
+</div>
+
+<div id="spice-view{{spice.id}}" class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <a href="#" onclick="history.back(); return false;">Voltar para a lista de especies</a>
+    </div>
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+        {% include 'passarinhar/components/spice_card.html' with spice=spice %}
+    </div>
+    <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+        {% csrf_token %}
+        <div id="spice-map{{spice.spice_code}}" class="p-1 my-1">{{ spice_map|safe }}</div>
+        <p class="card" id="wiki-summary-text{{spice.id}}"></p>
+        <div id="player{{spice.spice_code}}" class="d-flex flex-column"></div>
+    </div>
+</div>
+{% block script %}
+<script type="module" src="{% static 'passarinhar/geoloc.js' %}"></script>
+<script type="module" src="{% static 'passarinhar/spices.js' %}"></script>
+{% endblock %}
+{% endblock %}

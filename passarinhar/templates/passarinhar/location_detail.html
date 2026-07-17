@@ -1,0 +1,72 @@
+{% extends "passarinhar/layout.html" %}
+{% load static %}
+
+{% block body %}
+<h2 id="page-title">{{ title }}</h2>
+{% if error %}
+<div id='error-msg' class='alert alert-warning'>{{ error }}</div>
+{% else %}
+<div id='error-msg' class='alert alert-warning' style="display:none"></div>
+{% endif %}
+
+<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <a href="#" onclick="history.back(); return false;">Voltar</a>
+</div>
+<div id="loc-view" class="row p-1 my-1">
+    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+        <div id="name" class="text-capitalize font-weight-bold">{{ hotspot.name }} [{{hotspot.locId}}]</div>
+        <!--isHotspot? {{hotspot.isHotspot}}<br /-->
+        <div class="text-capitalize" id="location-coords">
+            <span class="font-weight-bold">Localização</span><br />
+            latitude: {{hotspot.latitude}} -- longitude: {{hotspot.longitude}}
+        </div>
+        <div id="location-region">
+            {{hotspot.subnational2Name}}--{{hotspot.subnational2Code}}<br />
+            {{hotspot.subnational1Name}}-{{hotspot.subnational1Code}}<br />
+            {{hotspot.countryName}}-{{hotspot.countryCode}} </br>
+
+        </div>
+    </div>
+    <div id="nearby_map_id" class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+        <div id="folium_map" class="text-capitalize font-weight-bold">{{hotspot.hierarchicalName}}</div>
+        {{ map|safe }}
+    </div>
+</div>
+{% for recent_observation in recent_obs %}
+<div class="row border border-secondary">
+    <div id="spice-div{{ forloop.counter0 }}" style="display:block" class="col-lg-4 col-md-4 col-sm-6 col-xs-12 my-1">
+        <h3 id="name{{ forloop.counter0 }}">{{recent_observation.comName}}</h3>
+        <span id="sciName{{ forloop.counter0 }}" style="display:none;">{{recent_observation.sciName}}</span>
+        <div id="locName{{ forloop.counter0 }}" style="display:none">{{ hotspot.name }}</div>
+        <ul>
+            <li>Data da observação <span id="obsDt{{ forloop.counter0 }}">{{recent_observation.obsDt}}</span></li>
+            <li>Quantidade <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
+            <li>Código da espécie <span id="speciesCode{{ forloop.counter0 }}"
+                    class="spice_code">{{recent_observation.speciesCode}}</span></li>
+
+            <li>Registrado por <span id="regby{{ forloop.counter0 }}">{{recent_observation.userDisplayName}}</span>
+            </li>
+            <li>ID. Obs <span id="obsId{{ forloop.counter0 }}">{{recent_observation.obsId}}</span>
+            <li>ID.checklist<span id="checklistId{{ forloop.counter0 }}">{{recent_observation.checklistId}}</span>
+        </ul>
+        <ul title="Taxonomia" id="spice-taxo{{recent_observation.speciesCode}}"></ul>
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+        <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar</button>
+        {% endif %}
+    </div>
+    <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12 p-3">
+        <img class='img-responsive bird-img' id={{recent_observation.comName}} src=""
+            alt="{{ recent_observation.sciName }}">
+    </div>
+    {% csrf_token %}
+    <div id="player{{recent_observation.comName}}" class="player"></div>
+</div>
+{% empty %}
+<div>*** Nenhuma observação encontrada ***</div>
+{% endfor %}
+
+{% block script %}
+<script type="module" src="{% static 'passarinhar/recents.js' %}"></script>
+{% endblock %}
+{% endblock %}
