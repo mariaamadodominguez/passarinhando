@@ -123,7 +123,8 @@ function replaceSecondOccurrence(originalString, search, replace) {
     // console.log(newString, capitalizeFirstLetter(newString))
     return capitalizeFirstLetter(newString);
 }
-function getCoordinates() {
+
+export function getCoordinates() {
     return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
             // Pass the resolve and reject functions as the callbacks
@@ -140,9 +141,10 @@ export const getCurrentLocation = async () => {
     try {
         const position = await getCoordinates();
         sessionStorage.geolocation = 1;
-        sessionStorage.lat = position.coords.latitude;
-        sessionStorage.lon = position.coords.longitude;
-        console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lon);
+        sessionStorage.lat = position.coords.latitude.toFixed(5);
+        sessionStorage.lng = position.coords.longitude.toFixed(5);
+        sessionStorage.gps_accuracy = position.coords.accuracy.toFixed(1);
+        console.log("Utils: getCurrentLocation", sessionStorage.lat, sessionStorage.lng, sessionStorage.gps_accuracy);
         // Use the latitude and longitude as needed
     } catch (error) {
         console.error("Utils: Error retrieving location:", error.message);
@@ -167,13 +169,13 @@ export const getXenoCanto = async (spice_code, scientific_name, limit = 3) => {
         },
         body: JSON.stringify({
             lat: sessionStorage.lat,
-            lon: sessionStorage.lon,
+            lng: sessionStorage.lng,
             species_code: scientific_name
         })
     })
         .then(response => response.json())
         .then(res => {
-            console.log('res', res)
+            //console.log('res', res)
             const recordings = res.recordings.recordings
             if (recordings) {
                 // Switch to HTML5 Native Audio (<audio>)

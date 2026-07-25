@@ -50,7 +50,14 @@
 </nav>
 {% if page_obj %}
 <div class='container' id="allplaces">
-    <p> <span Id="crnt-lat" class="coords"></span> <span Id="crnt-lon" class="coords"></span></p>
+    {% if request.session.crnt_lat and request.session.crnt_lng %}
+    <p> Localização atual:
+        <span Id="crnt-lat" class="coords">{{request.session.crnt_lat}}</span>
+        <span Id="crnt-lng" class="coords">{{request.session.crnt_lng}}</span>
+    </p>
+    <!-- Add this temporary line below your coordinates -->
+    <p>Precisão do GPS: <span id="gps-accuracy"></span> metros</p>
+    {% endif %}
     <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
         <h2 id="folium_map">Mapa</h2>
         {{ nearby_map|safe }}
@@ -80,7 +87,7 @@
             <div>{{ place.subnational2Code }}</div>
             <div>{{ place.region }} [{{ place.country }}]
                 <span id="lat{{place.id}}">{{ place.lat }}</span>
-                <span id="lon{{place.id}}">{{ place.lon }}</span>
+                <span id="lng{{place.id}}">{{ place.lon }}</span>
             </div>
             <span>Última Observação: {{place.latestObsDt}}</span>
             <span>Total Especies: {{place.numSpeciesAllTime}}</span>

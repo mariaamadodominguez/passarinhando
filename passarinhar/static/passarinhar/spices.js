@@ -29,15 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
 );
 
 const getWikiData = async (comName, sciName, spice_id) => {
-    console.log('getWikiData', comName, sciName)
+    //console.log('getWikiData', comName, sciName)
     const wiki_summary = await getWikiSummary(comName, sciName);
-    console.log('getWikiData', wiki_summary)
+    //console.log('getWikiData', wiki_summary)
     document.getElementById(`wiki-summary-text${spice_id}`).innerText = wiki_summary
 }
 function showSpiceMap(spice_code) {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/spice_map_view'
-    //console.log('spice_code', spice_code, sessionStorage.lat, sessionStorage.lon)
+    //console.log('spice_code', spice_code, sessionStorage.lat, sessionStorage.lng)
     var selector = `#spice-map${spice_code}`
     document.querySelector(selector).innerHTML = 'Carregando...'
     //console.log(document.querySelector(selector))
@@ -49,7 +49,7 @@ function showSpiceMap(spice_code) {
         },
         body: JSON.stringify({
             lat: sessionStorage.lat,
-            lon: sessionStorage.lon,
+            lng: sessionStorage.lng,
             species_code: spice_code
         })
     })

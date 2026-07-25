@@ -41,14 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveLocal(local_id) {
         url = '/addNewLocal'
-        //console.log(url, local_id); 
-        //console.log(document.querySelector(`#name${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#locId${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#subnational2Code${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#lat${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#lon${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#latestObsDt${local_id}`).innerHTML);
-        //console.log(document.querySelector(`#numSpeciesAllTime${local_id}`).innerHTML);
 
         fetch(url, {
             headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
@@ -56,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({
                 place: document.querySelector(`#name${local_id}`).innerHTML,
                 lat: document.querySelector(`#lat${local_id}`).innerHTML,
-                lon: document.querySelector(`#lon${local_id}`).innerHTML,
+                lng: document.querySelector(`#lng${local_id}`).innerHTML,
                 subnational2Code: document.querySelector(`#subnational2Code${local_id}`).innerHTML,
                 locId: document.querySelector(`#locId${local_id}`).innerHTML,
                 latestObsDt: document.querySelector(`#latestObsDt${local_id}`).innerHTML,

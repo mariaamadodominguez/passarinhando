@@ -10,9 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const url = '/birdoftheday';
         document.getElementById(`bird-of-the-day`).style.display = "none";
         await getCurrentLocation();
-        //
 
-        // console.log('showBirdofTheDay:', sessionStorage.lat, sessionStorage.lon);
+        console.log('showBirdofTheDay:', sessionStorage.lat, sessionStorage.lng);
         await fetch(url, {
             method: 'POST',
             headers: {
@@ -21,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify({
                 lat: sessionStorage.lat,
-                lon: sessionStorage.lon,
+                lng: sessionStorage.lng,
             })
         })
             .then(response => response.json())
@@ -50,7 +49,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 getRLCategory(document.querySelector(`#spice-rl`));
 
                 getWikiData(data[0], enCommon_name)
-
 
                 const player = document.createElement('div');
                 player.id = `player${data[0].speciesCode}`;

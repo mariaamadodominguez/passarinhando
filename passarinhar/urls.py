@@ -2,7 +2,8 @@ from django.urls import path
 
 from . import views
 app_name = "passarinhar"  
-urlpatterns = [
+urlpatterns = [    
+    path('save-coordinates/', views.save_coordinates, name='save_coordinates'),
     path("", views.index, name="index"),
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),
@@ -19,7 +20,7 @@ urlpatterns = [
     path("allplaces", views.allplaces, name="allplaces"),
     path("allspices", views.allspices, name="allspices"),
     path("spice_detail/<int:spice_id>",  views.spice_detail, name="spice_detail"),
-    path("<str:lat>/<str:lon>/<str:place>/localrecents", views.localrecents, name="localrecents"),
+    path("<str:lat>/<str:lng>/<str:place>/localrecents", views.localrecents, name="localrecents"),
     path("<str:loc_id>/hotspot", views.hotspot, name="hotspot"),
     path("sighting/<int:sighting_id>", views.sighting, name="sighting"),
     path("edit_sighting/<int:sighting_id>", views.edit_sighting, name="edit_sighting"),

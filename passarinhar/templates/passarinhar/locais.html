@@ -73,7 +73,13 @@
 </nav>
 
 <div class='container'>
-    <p> <span Id="crnt-lat" class="coords"></span> <span Id="crnt-lon" class="coords"></span></p>
+    <p> Localização atual:
+        <span Id="crnt-lat" class="coords">{{request.session.crnt_lat}}</span>
+        <span Id="crnt-lng" class="coords">{{request.session.crnt_lng}}</span>
+    </p>
+    <!-- Add this temporary line below your coordinates -->
+    <p>Precisão do GPS: <span id="gps-accuracy"></span> metros</p>
+
     <div id="nearby_map_id" class="my-2 p-2 bg-light border border-secondary">
         <h2 id="folium_map">Mapa</h2>
         {{ nearby_map|safe }}
@@ -84,7 +90,7 @@
         <h3 id="name{{forloop.counter0}}">{{local.locName}}</h3>
         <div id="coords{{forloop.counter0}}">Coords:
             <span id="lat{{forloop.counter0}}">{{local.lat}}</span>
-            <span id="lon{{forloop.counter0}}">{{local.lng}}</span>
+            <span id="lng{{forloop.counter0}}">{{local.lng}}</span>
         </div>
         {% if user.is_authenticated %}
         {% csrf_token %}

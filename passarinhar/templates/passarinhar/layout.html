@@ -69,11 +69,47 @@
             </div>
         </div>
     </nav>
-
     <div class="container body">
         {% block body %}
         {% endblock %}
     </div>
+
+    {% if not request.session.crnt_lat or not request.session.crnt_lng %}
+    <script type="module">
+        import { getCoordinates } from '../../static/passarinhar/utils.js';
+        // Auto-run on DOM load using the function
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // Await your Promise resolution
+                const position = await getCoordinates();
+                sessionStorage.geolocation = 1;
+                sessionStorage.lat = position.coords.latitude.toFixed(5);
+                sessionStorage.lng = position.coords.longitude.toFixed(5);
+                sessionStorage.gps_accuracy = position.coords.accuracy.toFixed(1);
+                // Send payload to Django
+                const data = {
+                    "crnt_lat": sessionStorage.lat,
+                    "crnt_lng": sessionStorage.lng,
+                    "coords_accuracy": sessionStorage.gps_accuracy
+                };
+                const response = await fetch("{% url 'passarinhar:save_coordinates' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+            } catch (error) {
+                console.warn("Location error caught:", error.message);
+                // Save state so we don't spam the user with permission prompts on next page click
+                sessionStorage.setItem("geo_permission_denied", "true");
+                sessionStorage.geolocation = 0;
+            }
+        });
+    </script>
+    {% endif %}
 </body>
 
 </html>
