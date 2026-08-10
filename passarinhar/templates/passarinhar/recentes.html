@@ -8,7 +8,7 @@
 {% else %}
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
-{% if type_page == 'recentes' %}
+{% if page_type == 'recentes' %}
 <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar1">
     <i class="bi bi-sliders"></i> Filtros</button>
 <div class="offcanvas offcanvas-end" tabindex="-1" id="filterSidebar1">
@@ -81,17 +81,24 @@
 {% for recent_observation in page_obj %}
 <div class="row p-1 my-1 bg-white text-dark border border-secondary">
     <div id="spice-div{{ forloop.counter0 }}" style="display:block" class="col-lg-4 col-md-4 col-sm-6 col-xs-12 my-1">
-        <h3 id="name{{ forloop.counter0 }}">{{recent_observation.comName}}</h3>
-        <span id="sciName{{ forloop.counter0 }}" style="display:none;">{{recent_observation.sciName}}</span>
+        <h3 id="name{{ forloop.counter0 }}" data-sciname="{{recent_observation.sciName}}" >{{recent_observation.comName}}</h3>        
         <ul>
             <li>Data da observação <span id="obsDt{{ forloop.counter0 }}">{{recent_observation.obsDt}}</span></li>
             <li>Local <span id="locName{{ forloop.counter0 }}">{{recent_observation.locName}}
                     Coords.{{recent_observation.lat}} {{recent_observation.lng}}</span></li>
             <li>Código da região {{recent_observation.locId}}</li>
-            <li>Quantidade <span id="howMany{{ forloop.counter0 }}">{{recent_observation.howMany}}</span></li>
+            
+            <li>Quantidade <span id="howMany{{ forloop.counter0 }}">
+                {% if recent_observation.howMany > 1%}
+                    {{recent_observation.howMany}}
+                {% else %}
+                    1
+                {% endif %}
+            </span></li>
+            
             <li>Código da espécie <span id="speciesCode{{ forloop.counter0 }}"
                     class="spice_code">{{recent_observation.speciesCode}}</span></li>
-
+            
         </ul>
         <ul title="Taxonomia" id="spice-taxo{{recent_observation.speciesCode}}"></ul>
         {% if user.is_authenticated %}
@@ -99,12 +106,28 @@
         <button id="{{ forloop.counter0 }}" type="submit" class="save-button btn btn-info">Salvar</button>
         {% endif %}
     </div>
-    <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12 p-3">
+    <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12">
+        <!-- 1. The wiki summary btn -->
+        <a id="{{recent_observation.sciName}}" data-common="{{recent_observation.comName}}" class="btn wiki-btn">
         <img class='img-responsive bird-img' id={{recent_observation.comName}} src=""
-            alt="{{ recent_observation.sciName }}">
+            alt="{{ recent_observation.sciName }}"></a>
     </div>
     {% csrf_token %}
     <div id="player{{recent_observation.comName}}" class="player"></div>
+    
+   
+    <!-- 2. The Modal Structure -->    
+    <!--div class="modal fade" id="wikiModal" tabindex="-1" role="dialog"-->
+    <div class="modal" id="wikiModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="wikiModalLabel">Wikidata</h5>                
+            </div>
+        <div class="modal-body" id="wikiModalText">Carregando...</div></div>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+    </div>
+    </div>
 </div>
 {% empty %}
 <div>*** Nenhuma observação encontrada ***</div>

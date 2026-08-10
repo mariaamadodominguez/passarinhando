@@ -8,7 +8,7 @@
 {% else %}
 <div id='error-msg' class='alert alert-warning' style="display:none;" ;></div>
 {% endif %}
-
+{% if page_type == 'all' %}
 <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar">
     <i class="bi bi-sliders"></i> Filtrar
 </button>
@@ -31,7 +31,11 @@
         </div>
     </div>
 </div>
-
+{% else %}
+<div class="container">
+    <a href="#" onclick="history.back(); return false;">Voltar</a>
+</div>
+{% endif %}
 {% if page_obj %}
 <nav class="p-1 my-1" aria-label="Page navigation">
     <ul class="pagination justify-content-end">
@@ -57,16 +61,13 @@
 {% endif %}
 <div id="current" class="row p-1 my-1">
     {% for spice in page_obj %}
-    <div class="header p-1 col-lg-4 col-md-4 col-sm-12 col-xs-12">
-        <h5>
-            <a href="{% url 'passarinhar:spice_detail' spice.id %}">{{ spice.name }}</a><br />
-            <small class="text-capitalize font-italic ">{{spice.scientific_name}}</small>
-        </h5>
-
-        <div class="image">
-            <img class="img-responsive img-thumbnail" src="{{ spice.image.thumbnails.small.url}}">
-        </div>
+    <div class="header p-1 col-lg-4 col-md-4 col-sm-12 col-xs-12">                
+        <a href="{% url 'passarinhar:spice_detail' spice.id %}">
+            <img class="img-responsive img-thumbnail" src="{{ spice.image.thumbnails.small.url}}"></a>
+        <a href="{% url 'passarinhar:spice_detail' spice.id %}">{{ spice.name }}</a>
+        <small class="font-italic ">{{spice.scientific_name}}</small>
     </div>
+
     {% empty %}
     <div>*** Nenhum registro ainda***</div>
     {% endfor %}

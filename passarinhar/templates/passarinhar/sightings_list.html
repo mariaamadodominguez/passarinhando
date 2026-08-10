@@ -68,9 +68,9 @@
     <div class="header">
         <h4><a href="{% url 'passarinhar:sighting' sighting.id %}">{{ sighting.spice }}</a></h4>
         {{ sighting.common_name }}
-        <div class="image">
+        <div class="image"><a href="{% url 'passarinhar:sighting' sighting.id %}">
             <img src="{{sighting.spice.image.thumbnails.small.url}}" alt="{{sighting.spice.name}}"
-                title="{{sighting.spice.name}}" class="img-responsive img-thumbnail">
+                title="{{sighting.spice.name}}" class="img-responsive img-thumbnail"></a>
         </div>
     </div>
     <div class="details">

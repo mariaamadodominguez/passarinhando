@@ -1,6 +1,6 @@
 from django.contrib import admin
 class SpiceAdmin(admin.ModelAdmin):
-    list_display = ("name", "spice_code")    
+    list_display = ("name", "spice_code", "taxon_order")    
 class PlaceAdmin(admin.ModelAdmin):
     list_display = ("place", "subnational2Code", "country", "lat", "lon")
 class DataZoneSpecieAdmin(admin.ModelAdmin):    

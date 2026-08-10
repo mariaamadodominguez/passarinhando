@@ -68,7 +68,7 @@ def fetch_hotspot(loc_id):
         # Process the successful response
         # print(response.json())  
         data = response.json()
-        print(data)  
+        
     return {
         'data': data 
     }
@@ -97,7 +97,7 @@ def fetch_location(loc_id):
     else:
         print(f"Success! Response status code for {url} is {response.status_code}")
         # Process the successful response
-        print(response.json())  
+        # print(response.json())  
         data = response.json()
         
         result = {
@@ -165,7 +165,7 @@ def calculate_xc_box(lat: float, lng: float, radius_km: float) -> str:
     # Format exactly as box:LAT_MIN,LON_MIN,LAT_MAX,LON_MAX (round to 4 decimals)
     return f"box:{lat_min:.4f},{lon_min:.4f},{lat_max:.4f},{lon_max:.4f}"
 
-def fetch_species_recordings(species_code, lat='', lng=''):
+def fetch_species_recordings(species_code, lat=FALLBACK_LAT, lng=FALLBACK_LNG):
     apikey = settings.XENO_API_KEY
     ppage = "50"
     reclen = "15-30"
@@ -259,7 +259,7 @@ def fetch_hotspots_nearby(lat, lng, dist = 15, region='BR-RJ-049'):
     }
 
 
-def fetch_recent_nearby_notable_observations(lat, lng, dist = 250, back = 30, detail = 'simple', hotspot = True, sppLocale = "pt-br"):
+def fetch_recent_nearby_notable_observations(lat=FALLBACK_LAT, lng=FALLBACK_LNG, dist = 250, back = 30, detail = 'simple', hotspot = True, sppLocale = "pt-br"):
     api_key = settings.EBIRD_API_KEY
     data = ''
     url = f"https://api.ebird.org/v2/data/obs/geo/recent/notable?lat={lat}&lng={lng}&detail={detail}&back={back}&dist={dist}&hotspot={hotspot}&sppLocale={sppLocale}"
@@ -284,7 +284,7 @@ def fetch_recent_nearby_notable_observations(lat, lng, dist = 250, back = 30, de
         'data': data 
     }
     
-def fetch_nearest_observations_of_a_species(species_code, lat, lng, dist= 50, back= 30, includeProvisional= True):
+def fetch_nearest_observations_of_a_species(species_code, lat=FALLBACK_LAT, lng=FALLBACK_LNG, dist= 50, back= 30, includeProvisional= True):
     api_key = settings.EBIRD_API_KEY
     data = ''
     url = f"https://api.ebird.org/v2/data/nearest/geo/recent/{species_code}?lat={lat}&lng={lng}&dist={dist}&back={back}&includeProvisional={includeProvisional}"
@@ -381,7 +381,7 @@ def allplaces(request):
     selected_subnational2Code = ''
     selected_region = ''
     selected_country = ''
-    title = "Locais de Avistamento Registrados"             
+    title = "Lugares de Avistamento Registrados"             
     
     crntlat = request.session.get("crnt_lat", FALLBACK_LAT) 
     crntlng = request.session.get("crnt_lng", FALLBACK_LNG) 
@@ -398,16 +398,16 @@ def allplaces(request):
 
     if selected_place != '':
         allplaces = Place.objects.filter(place__icontains=selected_place)            
-        title = f"Locais {selected_place}* registrados"
+        title = f"Lugares registrados como {selected_place}* "
     elif selected_subnational2Code != '':        
         allplaces = Place.objects.filter(subnational2Code=selected_subnational2Code) 
-        title = f"Locais de avistamento na area {selected_subnational2Code} "
+        title = f"Lugares de avistamento na area {selected_subnational2Code} "
     elif selected_region != '' :        
         allplaces = Place.objects.filter(region=selected_region)
-        title = f"Locais de avistamento na região {selected_region}"
+        title = f"Lugares de avistamento na região {selected_region}"
     elif selected_country != '' :        
         allplaces = Place.objects.filter(country=selected_country)
-        title = f"Locais de avistamento no pais {selected_country}"
+        title = f"Lugares de avistamento no pais {selected_country}"
     else:
         allplaces = Place.objects.all()
 
@@ -461,7 +461,7 @@ def allspices(request):
             except SpeciesTaxonomy.DoesNotExist:
                 # Handle the case where the object doesn't exist
                 taxon = None
-            #print(taxon)
+            # print(taxon)
             allspices = Spice.objects.filter(taxon_order__in=taxon)         
             title = f"Especies de {bird_families[0].pt_BR} registradas"
         else:
@@ -474,13 +474,48 @@ def allspices(request):
     if allspices:   
         p = Paginator(allspices, 10)        
         page_obj = p.get_page(page_number)     
-        #print(f'pagenumber {page_number}')   
+        # print(f'pagenumber {page_number}')   
     else:
         error = 'Sem dados'               
     
     return render(request, "passarinhar/spices.html", {
         'title':title,
         'form': form,
+        'page_type': 'all',
+        'page_obj':page_obj,
+        "error": error
+        })
+
+def family_spices(request, family_name):    
+    page_obj = None    
+    error = None    
+    family_spices = None    
+    title = "Especies da familia"         
+    form = SpiceForm()        
+    
+    bird_families = TabFamily.objects.filter(pt_BR=family_name)             
+    if bird_families:            
+        print(f"taxon order range {bird_families[0].taxon_order_begin}, {bird_families[0].taxon_order_end}")
+        try:
+            taxon = SpeciesTaxonomy.objects.filter(taxon_order__range = (bird_families[0].taxon_order_begin, bird_families[0].taxon_order_end))
+        except SpeciesTaxonomy.DoesNotExist:
+            # Handle the case where the object doesn't exist
+            taxon = None
+        # print(f"taxon {taxon}")
+        family_spices = Spice.objects.filter(taxon_order__in=taxon)         
+        title = f"Especies de {bird_families[0].pt_BR}"
+        family_spices = family_spices.order_by("name").all()      
+    
+    if family_spices:   
+        p = Paginator(family_spices, 10)        
+        page_obj = p.get_page(1)             
+    else:
+        error = 'Sem dados'               
+    
+    return render(request, "passarinhar/spices.html", {
+        'title':title,
+        'form': form,
+        'page_type':'family',
         'page_obj':page_obj,
         "error": error
         })
@@ -759,7 +794,7 @@ def bird_of_the_day_view(request):
             else:
                 return JsonResponse({'error': 'Nenhuma ave encontrada!'})
         # FIX: Add a return for when the content-type is NOT application/json
-        return render(request, 'passarinhar/bird_of_the_day.html')                        
+        return render(request, 'passarinhar/index.html')                        
     except Exception as e:
        # This bypasses Django's logger and forces a raw print to your terminal
         print("\n" + "="*50)
@@ -969,9 +1004,9 @@ def hotspot(request, loc_id):
         recent_observations_data = fetch_recent_observations_in_a_loc(loc_id)        
         try:
             if len(recent_observations_data['data']) == 0 :
-                print(f'map with no recent_observations_data ')                
+                print("map with no recent_observations_data")                
             else:                
-                print(f'map with recent_observations_data {recent_observations_data['data']}')
+                print(f"map with recent_observations_data {recent_observations_data['data']}")
             
             _map = show_on_map(lat, lng, "nearest", [], zoom_start = 10, home_label=hotspot_data['locName'])                                   
             map_html = _map._repr_html_() 
@@ -1009,7 +1044,7 @@ def localrecents(request, lat, lng, place):
     return render(request, "passarinhar/recentes.html", {
             "title":title,
             "error":error,
-            "type_page":'local',            
+            "page_type":'local',            
             "page_obj":page_obj,
             "map":map_html
                   })
@@ -1075,14 +1110,14 @@ def recent_observations_view(request):
         "title": title,
         "form": form,
         "error":error,            
-        "type_page":'recentes',            
+        "page_type":'recentes',            
         "page_obj":page_obj,
         "map":map_html
         })
 
 def mysightings(request):      
     mysightings = Sighting.objects.filter(birder=request.user)
-    #print(request.user, mysightings)
+    # print(request.user, mysightings)
     page_number = request.GET.get('page')
     error = None
     page_obj = None    
@@ -1090,11 +1125,11 @@ def mysightings(request):
     if mysightings:   
         p = Paginator(mysightings, 10)        
         page_obj = p.get_page(page_number)     
-        #print(f'pagenumber {page_number}')   
+        # print(f'pagenumber {page_number}')   
     else:
         error = 'Sem dados'   
     return render(request, "passarinhar/sightings_list.html", {
-        "title":f"{request.user} - Meus avistamentos",
+        "title":f"{request.user} - Meus resgistros de avistamento",
         "page_obj":page_obj,
         "form": SightingForm(),
         "error": error
@@ -1109,12 +1144,12 @@ def allsightings(request):
     if allsightings:   
         p = Paginator(allsightings, 10)        
         page_obj = p.get_page(page_number)     
-        #print(f'pagenumber {page_number}')   
+        # print(f'pagenumber {page_number}')   
     else:
         error = 'Sem dados'   
     
     return render(request, "passarinhar/sightings_list.html", {
-        "title":"Todos os avistamentos",
+        "title":"Todos os regsitros de avistamento",
         "page_obj":page_obj,
         "form": SightingForm(),
         "error":error
@@ -1123,7 +1158,7 @@ def allsightings(request):
 def sighting(request, sighting_id):
     try:
         currentSighting = Sighting.objects.get(id=sighting_id)   
-        #print(currentSighting.common_name, currentSighting.url_img)                 
+        # print(currentSighting.common_name, currentSighting.url_img)                 
         form = SightingForm(initial={"birdier_name":currentSighting.birder, "name":currentSighting.common_name, "spice":currentSighting.spice, "place":currentSighting.place, "date_created":currentSighting.date_created, "description":currentSighting.description})
         place = [currentSighting.place]
         home_map = show_on_map(place[0].lat, place[0].lon, "favourite", place)      
@@ -1142,7 +1177,7 @@ def edit_sighting(request, sighting_id):
     try:
         form = SightingForm(request.POST)      
         currentSighting = Sighting.objects.get(id=sighting_id)   
-        #print(currentSighting.birder, currentSighting.common_name, currentSighting.url_img) 
+        # print(currentSighting.birder, currentSighting.common_name, currentSighting.url_img) 
         if form.is_valid():     
             currentSighting.common_name = form.cleaned_data['name']
             currentSighting.spice = form.cleaned_data['spice']
@@ -1186,11 +1221,7 @@ def delete_sighting(request, sighting_id):
     #})
 
 def index(request):
-    if "crnt_lat" not in request.session:
-        request.session["crnt_lat"]=''
-        request.session["crnt_lng"]=''
-        request.session["coords_accuracy"]=0
-        
+           
     return render(request, 'passarinhar/index.html', {
         'title':"Ave do dia",
         "page_name": 'bird_otd'

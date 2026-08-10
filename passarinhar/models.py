@@ -149,6 +149,7 @@ class Spice(models.Model):
         return {
             "name": self.name,
             "spice": self.name,
+            "taxon": self.taxon_order.taxon_order,
             "family": self.DTScientific_name.Family,
             "RL_Category": self.DTScientific_name.RL_Category,
         } 

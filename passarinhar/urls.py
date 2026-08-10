@@ -19,6 +19,7 @@ urlpatterns = [
     path("favourites", views.favourites, name="favourites"),
     path("allplaces", views.allplaces, name="allplaces"),
     path("allspices", views.allspices, name="allspices"),
+    path("family_spices/<str:family_name>",  views.family_spices, name="family_spices"),    
     path("spice_detail/<int:spice_id>",  views.spice_detail, name="spice_detail"),
     path("<str:lat>/<str:lng>/<str:place>/localrecents", views.localrecents, name="localrecents"),
     path("<str:loc_id>/hotspot", views.hotspot, name="hotspot"),

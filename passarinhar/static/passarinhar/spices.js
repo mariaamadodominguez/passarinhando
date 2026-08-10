@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 );
 
 const getWikiData = async (comName, sciName, spice_id) => {
-    //console.log('getWikiData', comName, sciName)
+    console.log('getWikiData', comName, sciName)
     const wiki_summary = await getWikiSummary(comName, sciName);
     //console.log('getWikiData', wiki_summary)
     document.getElementById(`wiki-summary-text${spice_id}`).innerText = wiki_summary

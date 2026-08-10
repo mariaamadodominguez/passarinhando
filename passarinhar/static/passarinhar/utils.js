@@ -2,10 +2,9 @@ export const getWikiSummary = async (comName, sciName) => {
     const headers = new Headers();
     headers.append('User-Agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)');
     headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');
-    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;
-    // console.log(titles)
+    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;    
     titles = titles.replace(/\s+/g, ' ').trim()
-    console.log(titles)
+    // console.log(titles)
     var pt_url = "https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(titles);
     const init = {
         method: 'GET',
@@ -20,6 +19,9 @@ export const getWikiSummary = async (comName, sciName) => {
         .then((text) => {
             //console.log(text['extract'])
             summary_text = text['extract']
+            var wiki_url = text['content_urls']['desktop']['page'];
+            //console.log(wiki_url);
+            summary_text +=  '\nFonte: Wikipedia\n'+ wiki_url;
         })
         .catch((e) => {
             // error in e.message
@@ -28,82 +30,56 @@ export const getWikiSummary = async (comName, sciName) => {
     return summary_text
 }
 
-export const searchWikiData = async (comName, sciName, enComName = '') => {
-    var img_url = "";
-    var pageData = null
 
-    var en_url = "https://en.wikipedia.org/w/api.php";
-    var pt_url = "https://pt.wikipedia.org/w/api.php";
-    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;
-    //var titles = norm_comName + "|" + norm_comName + " (ave)|" + sciName;
-    //comName + "|" +
-    //var titles = comName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    //console.log(comName);
+export const searchWikiData = async (comName, sciName, enComName = '', lang = 'pt') => {
+    const headers = new Headers();
+    const titles = sciName != '' ? sciName :`${comName} (ave)`;
+    const noFreeThumbUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/8e/No_free_image_bird-he.png';
+    const encodedTitle = encodeURIComponent(titles);
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`;
+    headers.append('User-Agent', "PassarinharScraperBot/1.0 (mardomngz@gmail.com)");
+    headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');        
+    const init = {
+         method: 'GET',
+         headers: headers
+     };
 
-    var params = new URLSearchParams({
-        action: "query",
-        prop: "pageimages|pageprops",
-        pithumbsize: "300",
-        titles: titles,
-        format: "json",
-        origin: "*"
-    });
+    // console.log(`getWikipediaMainImage lang:${lang} encodedTitle:${encodedTitle}`)
+    // console.log(`url:${url}`)
+    
+    try {        
+        let response = await fetch(url, init);
 
-    await fetch(`${pt_url}?${params}`)
-        .then(response => response.json())
-        .then(res => {
-            // console.log(res)
-            for (var i = 0; i < Object.keys(res.query.pages).length; i++) {
-                pageData = res.query.pages[Object.keys(res.query.pages)[i]];
-                if (pageData.thumbnail) {
-                    img_url = pageData.thumbnail.source
-                    //console.log(i, pageData, img_url)
-                    if (i > 3)
-                        break;
-                }
-            }
-            //console.log(`pt_titles ${titles}`)
-        })
-        .catch(
-            (error) => console.error('Error:', error)
-        );
-    if (img_url == "") {
+        // Fallback logic: If comName fails (404), try the sciName
+        if (!response.ok && response.status === 404 ) {
+            console.log(`Scientific name not found. Trying comName...`);
+            const fallbackTitle = encodeURIComponent(`${comName}`);
+            const fallbackUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${fallbackTitle}`;
+            response = await fetch(fallbackUrl, init);
+        }
 
-        if (enComName == '')
-            titles = sciName
-        else
-            titles = sciName + "|" + replaceSecondOccurrence(enComName, '-', ' ')
-        params = new URLSearchParams({
-            action: "query",
-            prop: "pageimages|pageprops",
-            pithumbsize: "300",
-            titles: titles,
-            format: "json",
-            origin: "*"
-        });
-
-        await fetch(`${en_url}?${params}`)
-            .then(response => response.json())
-            .then(data => {
-                for (var i = 0; i < Object.keys(data.query.pages).length; i++) {
-                    pageData = data.query.pages[Object.keys(data.query.pages)[i]];
-                    if (pageData.thumbnail) {
-                        img_url = pageData.thumbnail.source
-                        // console.log(en_url, i, pageData, img_url)
-                    }
-                }
-                //console.log(`en_titles-${titles}`)
-            })
-            .catch(
-                (error) => console.error('Error:', error)
-            );
-    }
-    if (img_url == "") {
-
-        img_url = 'https://upload.wikimedia.org/wikipedia/commons/8/8e/No_free_image_bird-he.png'
-    }
-    return img_url;
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        // console.log(data);
+        // 4. Safely check if a thumbnail exists before reading .source
+        if (data.thumbnail && data.thumbnail.source) {            
+            // console.log("Image found:", data.thumbnail.source);
+            return data.thumbnail.source;
+        } else {
+            console.log("Page found, but it has no thumbnail image.");
+            return noFreeThumbUrl; 
+        }
+                
+    } catch (error) {
+        console.error('Error fetching Wikipedia image:', error.message);
+        return  noFreeThumbUrl;
+    }    
+    return  noFreeThumbUrl;
 }
+
 function capitalizeFirstLetter(string) {
     // console.log(string)
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -279,8 +255,14 @@ export const getTaxonomy = async (spice_code) => {
 
             const family2 = document.createElement('li');
             //var txtFamily2 = data[0].familyComName;
-            var txtFamily2 = pt_BR_family;
-            family2.innerHTML = txtFamily2;
+            const url_family = document.createElement('a');
+            url_family.href = "/family_spices/"  + pt_BR_family;
+            url_family.innerHTML = pt_BR_family;
+            family2.insertAdjacentElement("afterbegin", url_family);
+
+            //var txtFamily2 = pt_BR_family;
+            //family2.innerHTML = txtFamily2 
+
             document.querySelector(selector).append(family2);
 
             document.querySelector(selector).style.display = 'block';
