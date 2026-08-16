@@ -35,7 +35,8 @@
 {% for recent_observation in recent_obs %}
 <div class="row border border-secondary">
     <div id="spice-div{{ forloop.counter0 }}" style="display:block" class="col-lg-4 col-md-4 col-sm-6 col-xs-12 my-1">
-        <h3 id="name{{ forloop.counter0 }}">{{recent_observation.comName}}</h3>
+        <h3 id="name{{ forloop.counter0 }}" data-sciname="{{recent_observation.sciName}}">{{recent_observation.comName}}
+        </h3>
         <span id="sciName{{ forloop.counter0 }}" style="display:none;">{{recent_observation.sciName}}</span>
         <div id="locName{{ forloop.counter0 }}" style="display:none">{{ hotspot.name }}</div>
         <ul>
@@ -56,11 +57,26 @@
         {% endif %}
     </div>
     <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12 p-3">
-        <img class='img-responsive bird-img' id={{recent_observation.comName}} src=""
-            alt="{{ recent_observation.sciName }}">
+        <a id="{{recent_observation.sciName}}" data-obsid="{{ forloop.counter0 }}"
+            data-common="{{recent_observation.comName}}">
+            <img class='img-responsive bird-img' id={{recent_observation.comName}} src=""
+                alt="{{ recent_observation.sciName }}"></a>
     </div>
     {% csrf_token %}
     <div id="player{{recent_observation.comName}}" class="player"></div>
+    <!-- The Modal Structure -->
+    <!--div class="modal fade" id="wikiModal" tabindex="-1" role="dialog"-->
+    <div class="modal" id="wikiModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="wikiModalLabel">Wikidata</h5>
+                </div>
+                <div class="modal-body" id="wikiModalText">Carregando...</div>
+            </div>
+            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+    </div>
 </div>
 {% empty %}
 <div>*** Nenhuma observação encontrada ***</div>

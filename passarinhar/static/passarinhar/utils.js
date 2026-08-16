@@ -1,58 +1,67 @@
-export const getWikiSummary = async (comName, sciName) => {
+export const getWikiSummary = async (comName, sciName, lang = 'pt') => {
     const headers = new Headers();
     headers.append('User-Agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)');
     headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');
-    var titles = sciName + "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;    
-    titles = titles.replace(/\s+/g, ' ').trim()
-    // console.log(titles)
-    var pt_url = "https://pt.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(titles);
+
+    var titles = titles = sciName.replace(/\s+/g, ' ').trim()
+    console.log(titles)
+    var url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titles)}`;
     const init = {
         method: 'GET',
-        headers
+        headers: headers
     };
     var summary_text = '';
+    try {
+        let response = await fetch(url, init);
 
-    await fetch(pt_url, init)
-        .then((response) => {
-            return response.json();
-        })
-        .then((text) => {
-            //console.log(text['extract'])
-            summary_text = text['extract']
-            var wiki_url = text['content_urls']['desktop']['page'];
-            //console.log(wiki_url);
-            summary_text +=  '\nFonte: Wikipedia\n'+ wiki_url;
-        })
-        .catch((e) => {
-            // error in e.message
-            console.log(e.message)
-        });
+        // Fallback logic: If comName fails (404), try the commonName
+        if (!response.ok && response.status === 404) {
+            console.log(`Scientific name not found. Trying comName...`);
+            const fallbackTitle = encodeURIComponent(`${comName}`);
+            //+ "|" + comName.normalize('NFD').replace(/[\u0300-\u036f]/g, '') + " (ave)|" + comName + " (ave) |" + comName;
+            const fallbackUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${fallbackTitle}`;
+            response = await fetch(fallbackUrl, init);
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const text = await response.json();
+        summary_text = text['extract']
+        var wiki_url = text['content_urls']['desktop']['page'];
+        summary_text += '\nFonte: Wikipedia\n' + wiki_url;
+
+    } catch (error) {
+        console.error(`Error fetching Wikipedia summary: ${comName}, ${sciName} ${error.message}`);
+        return 'N/I';
+    }
     return summary_text
 }
 
 
 export const searchWikiData = async (comName, sciName, enComName = '', lang = 'pt') => {
     const headers = new Headers();
-    const titles = sciName != '' ? sciName :`${comName} (ave)`;
+    const titles = sciName != '' ? sciName : `${comName} (ave)`;
     const noFreeThumbUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/8e/No_free_image_bird-he.png';
     const encodedTitle = encodeURIComponent(titles);
     const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`;
     headers.append('User-Agent', "PassarinharScraperBot/1.0 (mardomngz@gmail.com)");
-    headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');        
+    headers.append('cookie', 'SameSite=None,SameSite=None,SameSite=None');
     const init = {
-         method: 'GET',
-         headers: headers
-     };
+        method: 'GET',
+        headers: headers
+    };
 
     // console.log(`getWikipediaMainImage lang:${lang} encodedTitle:${encodedTitle}`)
     // console.log(`url:${url}`)
-    
-    try {        
+
+    try {
         let response = await fetch(url, init);
 
         // Fallback logic: If comName fails (404), try the sciName
-        if (!response.ok && response.status === 404 ) {
-            console.log(`Scientific name not found. Trying comName...`);
+        if (!response.ok && response.status === 404) {
+            console.log(`Scientific name ${sciName} not found. Trying comName ${comName}...`);
             const fallbackTitle = encodeURIComponent(`${comName}`);
             const fallbackUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${fallbackTitle}`;
             response = await fetch(fallbackUrl, init);
@@ -61,43 +70,20 @@ export const searchWikiData = async (comName, sciName, enComName = '', lang = 'p
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        // console.log(data);
-        // 4. Safely check if a thumbnail exists before reading .source
-        if (data.thumbnail && data.thumbnail.source) {            
-            // console.log("Image found:", data.thumbnail.source);
+        // check if a thumbnail exists before reading .source
+        if (data.thumbnail && data.thumbnail.source) {
             return data.thumbnail.source;
         } else {
-            console.log("Page found, but it has no thumbnail image.");
-            return noFreeThumbUrl; 
+            console.log(`Page found, but it has no thumbnail image.${comName}, ${sciName}`);
+            return noFreeThumbUrl;
         }
-                
+
     } catch (error) {
-        console.error('Error fetching Wikipedia image:', error.message);
-        return  noFreeThumbUrl;
-    }    
-    return  noFreeThumbUrl;
-}
-
-function capitalizeFirstLetter(string) {
-    // console.log(string)
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-}
-
-function replaceSecondOccurrence(originalString, search, replace) {
-    let count = 0;
-    // Use a global regex to find all occurrences
-    const regex = new RegExp(search, 'g');
-
-    const newString = originalString.replace(regex, (match) => {
-        count++;
-        // If it's the second occurrence (count === 2), return the replacement string, 
-        // otherwise return the original match
-        return (count === 2) ? replace : match;
-    });
-    // console.log(newString, capitalizeFirstLetter(newString))
-    return capitalizeFirstLetter(newString);
+        console.log(`Error : ${error.message} fetching Wikipedia image ${sciName}${comName}`);
+        return noFreeThumbUrl;
+    }
 }
 
 export function getCoordinates() {
@@ -211,7 +197,7 @@ export const getXenoCanto = async (spice_code, scientific_name, limit = 3) => {
         })
 }
 
-export const getTaxonomy = async (spice_code) => {
+export const getTaxonomy = async (spice_code, localfamily_lnk) => {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const url = '/taxonomy_view';
     var selector = `#spice-taxo${spice_code}`;
@@ -231,48 +217,51 @@ export const getTaxonomy = async (spice_code) => {
         .then(response => response.json())
         .then(res => {
             const data = res.data
-            const pt_BR_family = res.pt_BR_family
-            //console.log('Taxon res:', res);
-            //console.log('Taxon data:', data);
-            //console.log('pt_BR_family:', pt_BR_family);
+            const local_family = res.pt_BR_family
 
             const sciName = document.createElement('li');
             var txtSciName = `Nome científico: ${data[0].sciName} `;
             sciName.innerHTML = txtSciName;
             document.querySelector(selector).append(sciName);
-            // console.log('Taxon Sciname:', sciName.innerHTML);
 
             const order = document.createElement('li');
             var txtOrder = `Ordem: ${data[0].taxonOrder} - ${data[0].order}`;
             order.innerHTML = txtOrder;
-            // console.log('Taxon order:', order.innerHTML);
             document.querySelector(selector).append(order);
 
             const family = document.createElement('li');
-            var txtFamily = `Familia: ${data[0].familyCode} - ${data[0].familySciName}`;
+            var txtFamily = `Familia: ${data[0].familyCode} `;
             family.innerHTML = txtFamily;
+            const url_family = document.createElement('a');
+            url_family.id = data[0].familySciName;
+            url_family.className = 'wiki-lnk'
+            url_family.innerHTML = data[0].familySciName;
+            family.insertAdjacentElement("beforeend", url_family);
             document.querySelector(selector).append(family);
 
+            url_family.addEventListener('click', () =>
+                displayWikiPopup(local_family, url_family.id));
+
             const family2 = document.createElement('li');
-            //var txtFamily2 = data[0].familyComName;
-            const url_family = document.createElement('a');
-            url_family.href = "/family_spices/"  + pt_BR_family;
-            url_family.innerHTML = pt_BR_family;
-            family2.insertAdjacentElement("afterbegin", url_family);
-
-            //var txtFamily2 = pt_BR_family;
-            //family2.innerHTML = txtFamily2 
-
+            console.log("localfamily_lnk", localfamily_lnk)
+            if (localfamily_lnk) {
+                const url_family2 = document.createElement('a');
+                url_family2.href = "/family_spices/" + local_family;
+                url_family2.innerHTML = local_family;
+                family2.insertAdjacentElement("afterbegin", url_family2);
+            } else {
+                family2.innerHTML = local_family;
+            }
             document.querySelector(selector).append(family2);
 
             document.querySelector(selector).style.display = 'block';
-
         })
         .catch(() => {
             error => console.error('Error:', error)
         });
     return;
 }
+
 
 export const getRLCategory = (rlcat) => {
     var rl = rlcat.innerHTML
@@ -313,4 +302,50 @@ export const getRLCategory = (rlcat) => {
     }
     rlcat.innerHTML = RL_CATEGORY
     return;
-} 
+}
+/* Modal for wiki data */
+var bootstrapModal;
+try {
+    const wikiModal = document.getElementById('wikiModal');
+
+    // 1. Remove focus right before the modal starts hiding
+    wikiModal.addEventListener('hide.bs.modal', function () {
+        if (document.activeElement && wikiModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    });
+
+    // 2. Safely apply aria-hidden only after the transition completes
+    wikiModal.addEventListener('hidden.bs.modal', function () {
+        wikiModal.setAttribute('aria-hidden', 'true');
+    });
+
+    // 3. Remove aria-hidden when the modal opens again
+    wikiModal.addEventListener('show.bs.modal', function () {
+        wikiModal.removeAttribute('aria-hidden');
+    });
+
+    // Function to handle the popup state
+    bootstrapModal = new bootstrap.Modal(wikiModal);
+} catch (error) {
+    // in case there is no wiki modal in page
+}
+
+async function displayWikiPopup(familyLocalName, familyName) {
+    //event.preventDefault();
+    const textContainer = document.getElementById('wikiModalText');
+    const textHeader = document.getElementById('wikiModalLabel');
+    // Reset and show loading state
+    textContainer.innerText = "Carregando sumário...";
+    textHeader.innerText = familyName;
+    bootstrapModal.show();
+
+    try {
+        // Fetch the plain text string
+        const plainText = await getWikiSummary(familyLocalName, familyName);
+        textContainer.innerText = plainText;
+
+    } catch (error) {
+        textContainer.innerText = "Error carregando sumário. Tente mais tarde.";
+    }
+}

@@ -352,7 +352,7 @@ def fetch_recent_observations_in_a_loc(local_id, howmany= 10, locale= "pt-br"):
     try:
         response = requests.request("GET", url, headers=headers, data=payload, timeout=5) 
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
-        print(api_key, response.text)
+        # print(api_key, response.text)
     except Exception as err:
         # Handle any other potential exceptions
         print(f"An unexpected error occurred: {err}")
@@ -524,13 +524,53 @@ def spice_detail(request, spice_id):
     try:
         currentSpice = Spice.objects.get(id=spice_id)           
     except Spice.DoesNotExist:
-        raise Http404("Sighting not found.")
+        raise Http404("Specie not found.")
 
     return render(request, "passarinhar/spice_detail.html", {
         "title":f"{currentSpice.name}",
         "spice": currentSpice,                 
     })
 
+def obs_detail(request, name):    
+    try:
+        obs_spice = None
+        # print(f"obs_detail{request}")        
+        scientific_name = request.GET.get('sci_name')
+        spice_code = request.GET.get('spec_code')
+        img_url = request.GET.get('img')
+        DZS_name=scientific_name
+        try:
+                spice = DataZoneSpecie.objects.get(Scientific_name=DZS_name)
+        except DataZoneSpecie.DoesNotExist:
+                spice = None                
+        taxon_spice_code = spice_code
+        try:
+                taxon = SpeciesTaxonomy.objects.get(species_code=taxon_spice_code)
+        except SpeciesTaxonomy.DoesNotExist:
+                taxon = None
+        try:
+            obs_spice = Spice(
+                spice_code=spice_code,
+                name=name,                
+                taxon_order=taxon,
+                scientific_name=scientific_name,
+                DTScientific_name = spice,                
+                url_spice_img=img_url
+            )
+            # save_img(name, img_url, obs_spice)                
+            # print(obs_spice.image)        
+        except Exception as e:
+            print(e)        
+            obs_spice = None
+            
+    except Exception as e:
+        raise e  
+    
+    return render(request, "passarinhar/spice_detail.html", {
+        "title": name,
+        "spice": obs_spice,                                 
+    })
+    
 
 def addFavourite(request):    
     data = json.loads(request.body)    
@@ -745,7 +785,7 @@ def get_data_zone_specie(request):
         # Handle the case where the object doesn't exist                    
         print({f"error": "Record {DZS_name} not found."}, status=404)
         return JsonResponse({'error': 'Nenhuma ave encontrada!'})
-    
+    return render(request, 'passarinhar/index.html')                        
 
 def bird_player_view(request):
     # print('bird_player_view')
@@ -760,6 +800,7 @@ def bird_player_view(request):
         return JsonResponse({
             'recordings':recordings
         }, content_type='application/json') 
+    return render(request, 'passarinhar/index.html')                        
 
 def bird_of_the_day_view(request):
     try:         
@@ -869,9 +910,8 @@ def spice_map_view(request):
     except Exception as e:
        return JsonResponse({'error': str(e)})
 
-def save_img(name, url_spice_img):      
-    try:    
-        
+def save_img(name, url_spice_img, instance):      
+    try:            
         img_temp = NamedTemporaryFile(delete=True)
         req = urllib.request.Request(url_spice_img, headers={'User-Agent': 'MyPythonScript/1.0 (maria.amado.d@gmail.com)'})
         with urllib.request.urlopen(req) as response:
@@ -879,16 +919,14 @@ def save_img(name, url_spice_img):
         # print (f'Imagem url {url_spice_img}')                              
         img_temp.flush()     
                              
-        # Create a model instance and save the image        
-        instance = Spice.objects.filter(name=name)
-        if instance is None:
-            print({f"error": "Record {name} not found."}, status=404)
-        else:
-            upload_dir = os.path.join(settings.MEDIA_ROOT, 'spice_images/')
-            if not os.path.exists(upload_dir):
-                print('making os.path({upload_dir})')
-                os.makedirs(upload_dir, exist_ok=True)
-            instance[0].image.save(f"remote_{name}.jpg", File(img_temp), save=True)                               
+        # save the image in the model instance
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'spice_images/')
+        if not os.path.exists(upload_dir):
+            print('making os.path({upload_dir})')
+            os.makedirs(upload_dir, exist_ok=True)
+
+        # commits the new filename to the database row right away, saving from writing an extra instance.save()
+        instance.image.save(f"remote_{name}.jpg", File(img_temp), save=True)                               
         # print (f'Image remote_{name}.jpg saved')
     except Exception as e:
        print ({'error': str(e)})
@@ -929,10 +967,9 @@ def addNewSpice(request):
                 DTScientific_name = spice,
                 description=description,
                 url_spice_img=url_spice_img
-                )
-                new_spice.save()
+                )                                
+                save_img(name, url_spice_img, new_spice)                
                 message = f'Passarinho {name} cadastrado com sucesso.'                                        
-                save_img(name, url_spice_img)                
 
     except Exception as e:
         return JsonResponse({'error': str(e)})  

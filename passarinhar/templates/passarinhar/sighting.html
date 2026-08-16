@@ -12,7 +12,7 @@
 <h2>{{ title }}</h2>
 <div class="p-1 my-1 row bg-white text-dark border border-secondary">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <a href="#" onclick="history.back(); return false;">Voltar para a lista de avistamentos</a>
+        <a href="#" onclick="history.back(); return false;">Voltar</a>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
         {% if user.is_authenticated and user == sighting.birder %}
@@ -45,6 +45,19 @@
         </div>
         <div id="wiki-summary-text"></div>
         <div id="player{{sighting.spice.spice_code}}"></div>
+        <!-- The Modal Structure -->
+        <!--div class="modal fade" id="wikiModal" tabindex="-1" role="dialog"-->
+        <div class="modal" id="wikiModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="wikiModalLabel">Wikidata</h5>
+                    </div>
+                    <div class="modal-body" id="wikiModalText">Carregando...</div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+        </div>
     </div>
     <div class="spice col-lg-6 col-md-9 col-sm-6 col-xs-12" id='{{sighting.spice.id}}'>
         {% include 'passarinhar/components/spice_card.html' with spice=sighting.spice %}

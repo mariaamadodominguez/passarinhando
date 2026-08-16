@@ -27,11 +27,14 @@ urlpatterns = [
     path("edit_sighting/<int:sighting_id>", views.edit_sighting, name="edit_sighting"),
     path("delete_sighting/<int:sighting_id>", views.delete_sighting, name="delete_sighting"),
     path("addNewSighting", views.addNewSighting, name="addNewSighting"),
+    #name, scientific_name, spice_code, url_spice_img
+    path("obs_detail/<str:name>", views.obs_detail, name="obs_detail"),
 
     # API Routes
     path("addNewPost", views.addNewPost, name="addNewPost"), 
     path("addNewLike", views.addNewLike, name="addNewLike"),
     path("addNewLocal", views.addNewLocal, name="addNewLocal"),
+    
     path("addNewSpice", views.addNewSpice, name="addNewSpice"),
     path("addFavourite", views.addFavourite, name="addFavourite"),
     path("addRemoveFollowing", views.addRemoveFollowing, name='addRemoveFollowing'),    

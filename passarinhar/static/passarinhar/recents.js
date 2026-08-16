@@ -12,25 +12,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // taxonomy
     var spice_codes = Array.from(document.getElementsByClassName('spice_code'));
-    spice_codes.forEach(async function (_code) { await getTaxonomy(_code.innerHTML.trim()) })
+    spice_codes.forEach(async function (_code) { await getTaxonomy(_code.innerHTML.trim(), false) })
 
-    // sounds
+    // sounds, images and detail link
     var bird_imgs = Array.from(document.getElementsByClassName('bird-img'));
     bird_imgs.forEach(async function (_img) {
-        //console.log(_img.alt, _img.id);
-        _img.src = await searchWikiData(_img.id, _img.alt);
-        getXenoCanto(_img.id, _img.alt, 1);
+        var comName = _img.id.trim();
+        var sciName = _img.alt;
+
+        _img.src = await searchWikiData(comName, sciName);
+        getXenoCanto(comName, sciName, 1);
+
+        var ob_a = document.getElementById(sciName)
+        var ob_id = ob_a.dataset.obsid;
+        var species_code = document.querySelector(`#speciesCode${ob_id}`).innerHTML
+        ob_a.href = `/obs_detail/${comName}?sci_name=${sciName}&spec_code=${species_code}&img=${_img.src}`;
     })
 
-    // summary
-    var wiki_btns = Array.from(document.getElementsByClassName('wiki-btn'));
-    wiki_btns.forEach(_btn => {
-        var comName = _btn.dataset.common.trim();         
-        var sciName = _btn.id;
-        // console.log(sciName, comName)
-        document.getElementById(_btn.id).addEventListener('click', () =>
-            displayWikiPopup(sciName, comName));
-    })
+    /* family summary     
+    var wiki_lnk = Array.from(document.getElementsByClassName('wiki-lnk'));
+    console.log('wiki_lnk', wiki_lnk.length);
+    wiki_lnk.forEach(_lnk => {
+        var familyName = _lnk.id;
+        console.log(familyName, _lnk.id)
+        document.getElementById(_lnk.id).addEventListener('click', () =>
+            displayWikiPopup(familyName));
+    })*/
 
     // Get all radio buttons in the 'my_choice' group
     const radioButtons = document.querySelectorAll('input[name="tipo_procura"]');
@@ -75,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 )
 
-
 const wikiModal = document.getElementById('wikiModal');
 
 // 1. Remove focus right before the modal starts hiding
@@ -98,19 +104,19 @@ wikiModal.addEventListener('show.bs.modal', function () {
 // Function to handle the popup state
 const bootstrapModal = new bootstrap.Modal(wikiModal);
 
-async function displayWikiPopup(sciName, commonName) {
-    event.preventDefault(); 
+async function displayWikiPopup(familyName) {
+    preventDefault();
     const textContainer = document.getElementById('wikiModalText');
     const textHeader = document.getElementById('wikiModalLabel');
     // Reset and show loading state
     textContainer.innerText = "Carregando sumário...";
-    textHeader.innerText = commonName;
+    textHeader.innerText = familyName;
     bootstrapModal.show();
-    
+
     try {
         // Fetch the plain text string
-        const plainText = await getWikiSummary(sciName, commonName);
-        textContainer.innerText = plainText; 
+        const plainText = await getWikiSummary(familyName, '');
+        textContainer.innerText = plainText;
     } catch (error) {
         textContainer.innerText = "Error carregando sumário. Tente mais tarde.";
     }
@@ -118,7 +124,7 @@ async function displayWikiPopup(sciName, commonName) {
 
 function saveSpice(spice_id) {
     var url = '/addNewSpice'
-    var name = document.querySelector(`#name${spice_id}`).innerHTML;
+    var name = document.querySelector(`#name${spice_id}`).innerHTML.trim();
     var sci_name = document.querySelector(`#name${spice_id}`).dataset.sciname;
     var species_code = document.querySelector(`#speciesCode${spice_id}`).innerHTML
     var species_desc = document.querySelector(`#obsDt${spice_id}`).innerHTML + ' ' + document.querySelector(`#locName${spice_id}`).innerHTML + ' ' + document.querySelector(`#howMany${spice_id}`).innerHTML

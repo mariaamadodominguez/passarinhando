@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var spice_code = document.querySelector(`#spice-code${idcat}`).innerHTML.trim();;
     var scientific_name = document.querySelector(`#sciname${idcat}`).innerHTML.trim();;
     var common_name = document.querySelector(`#comname${idcat}`).innerHTML.trim();;
-    getTaxonomy(spice_code)
+    getTaxonomy(spice_code, True)
     getXenoCanto(spice_code, scientific_name)
     getWikiData(common_name, scientific_name)
 
